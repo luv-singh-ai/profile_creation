@@ -1,0 +1,15 @@
+ops/.env
+.DS_Store
+notebooks
+# FILEPATH:
+# BEGIN: python-gitignore
+*.pyc
+__pycache__/
+venv/
+*.env
+.vscode/
+.DS_store
+/Users/leader/Downloads/AI_Army/ML_Basics/NLP/My_ChatBot/Mr-Nags/notebooks/egov
+changes.patch
+/Users/leader/Downloads/AI_Army/ML_Basics/NLP/My_ChatBot/citizem_profile_creation/notebooks
+# END: python-gitignore
