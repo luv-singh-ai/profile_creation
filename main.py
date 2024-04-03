@@ -27,9 +27,14 @@ from core.ai import (
     chat, 
     audio_chat, 
     bhashini_text_chat, 
-    bhashini_audio_chat
+    bhashini_audio_chat,
+    parse_photo_text,
+    process_image
 )
 from utils.redis_utils import set_redis
+import os
+import pytesseract
+from PIL import Image
 from utils.openai_utils import (
     get_duration_pydub, 
     get_random_wait_messages
@@ -134,6 +139,72 @@ async def query_handler(update: Update, context: CallbackContext):
     elif update.message.voice:
         voice = await context.bot.get_file(update.message.voice.file_id)
         await talk_handler(update, context, voice)
+    elif update.message.photo:
+        photo = await context.bot.get_file(update.message.photo[-1].file_id) # update.message.photo[0].file_id
+        await photo_handler(update, context, photo)
+
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
+    '''
+        # Get the file ID of the image
+        # file_id = update.message.photo[-1].file_id
+        
+        # Download the image file
+        # file = await context.bot.get_file(file_id)
+        file_path = await context.bot.download_to_drive(photo.file_path) # 'current_image.jpg'
+        text_1 = parse_photo_text(text)
+        
+        response = chat(chat_id, text_1)
+        print(f"response is {response}")
+        # Delete the downloaded image file
+        os.remove(file_path)
+        
+        await context.bot.send_message(chat_id=update.effective_chat.id, text= response)
+    '''
+    """
+    async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        user = update.message.from_user
+        photo_file = await update.message.photo[-1].get_file()
+        await photo_file.download_to_drive("user_photo.jpg")
+        logger.info("Photo of %s: %s", user.first_name, "user_photo.jpg")
+        await update.message.reply_text(
+            "Gorgeous! Now, send me your location please, or send /skip if you don't want to."
+        )
+    """
+    lang = context.user_data.get('lang')
+    
+    with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
+        await photo.download_to_drive(custom_path=temp_image_file.name)
+        chat_id = update.effective_chat.id
+
+        wait_message = get_random_wait_messages(
+                not_always=True,
+                lang=lang
+        )
+        if wait_message:
+            await context.bot.send_message(chat_id=chat_id, text=wait_message)
+
+        with open(temp_image_file.name, "rb") as file: # Open the image file in binary mode
+            photo_data = file.read()
+            text = process_image(chat_id, photo_data) # file
+            print(f"text is {text}")
+            text_1 = parse_photo_text(text)
+            response = chat(chat_id, text_1)
+            
+            # response_photo, assistant_message, history = parse_photo_text(
+            #     chat_id, photo_file=open(temp_image_file.name, "rb")
+            # )
+            # response_photo.stream_to_file(temp_image_file.name)
+            #duration = get_duration_pydub(temp_image_file.name)
+            # await context.bot.send_photo(
+            #     chat_id=chat_id, 
+            #     #photo=open(temp_image_file.name, "rb"), 
+            #     filename="response.jpg",
+            #     performer="Yojana Didi",
+            # )
+            await context.bot.send_message(
+                chat_id=chat_id, text=response
+            )
+            file.close()
 
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
     response = ""
@@ -240,7 +311,7 @@ if __name__ == '__main__':
     application.add_handler(chosen_language)
     application.add_handler(
         MessageHandler(
-            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
+            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)) | (filters.PHOTO & (~filters.COMMAND)), 
             response_handler
         )
     )
