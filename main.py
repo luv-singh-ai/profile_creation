@@ -76,7 +76,7 @@ async def language_handler(update: Update, context: CallbackContext):
     keyboard = [
         [InlineKeyboardButton("English", callback_data='1')],
         [InlineKeyboardButton("हिंदी", callback_data='2')],
-        #[InlineKeyboardButton("ਪੰਜਾਬੀ", callback_data='3')],
+        [InlineKeyboardButton("मराठी", callback_data='3')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -89,7 +89,7 @@ async def language_handler(update: Update, context: CallbackContext):
 async def preferred_language_callback(update: Update, context: CallbackContext):
     
     callback_query = update.callback_query
-    languages = {"1": "en", "2": "hi"} # "3": "pa"
+    languages = {"1": "en", "2": "hi", "3": "ma"}
     try:
         preferred_language = callback_query.data
         lang = languages.get(preferred_language)
@@ -104,10 +104,10 @@ async def preferred_language_callback(update: Update, context: CallbackContext):
     text_message = ""
     if lang == "en":
         text_message = "You have chosen English. \nPlease share your details"
-    else:
+    elif lang == "hi":
         text_message = "आपने हिंदी चुनी है. \nकृपया मुझे अपने बारे में बताएं।"
-    # elif lang == "pa":
-    #     text_message = "ਤੁਸੀਂ ਪੰਜਾਬੀ ਨੂੰ ਚੁਣਿਆ ਹੈ। \ਕਿਰਪਾ ਕਰਕੇ ਹੁਣੇ ਆਪਣੀ ਸ਼ਿਕਾਇਤ ਦਿਓ"
+    elif lang == "ma":
+        text_message = "तुम्ही मराठीची निवड केली आहे. \कृपया तुमचे तपशील शेअर करा"
         
     set_redis('lang', lang)
     
@@ -188,7 +188,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, phot
             text = process_image(chat_id, photo_data) # file
             print(f"text is {text}")
             text_1 = parse_photo_text(text)
-            response = chat(chat_id, text_1)
+            assistant_message = chat(chat_id, text_1)
             
             # response_photo, assistant_message, history = parse_photo_text(
             #     chat_id, photo_file=open(temp_image_file.name, "rb")
@@ -202,7 +202,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, phot
             #     performer="Yojana Didi",
             # )
             await context.bot.send_message(
-                chat_id=chat_id, text=response
+                chat_id=chat_id, text=assistant_message
             )
             file.close()
 
@@ -245,12 +245,11 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                 audio_data = file.read()
                 audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-        
                 response_audio, assistant_message, history = audio_chat(
                     chat_id, audio_file=open(temp_audio_file.name, "rb")
                 )
                 response_audio.stream_to_file(temp_audio_file.name)
-                duration = get_duration_pydub(temp_audio_file.name)
+                duration = get_duration_pydub(temp_audio_file.name) # error is "raise JSONDecodeError("Expecting value", s, err.value) from None"
                 await context.bot.send_audio(
                     chat_id=chat_id, 
                     audio=open(temp_audio_file.name, "rb"), 

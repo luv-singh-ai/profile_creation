@@ -334,7 +334,7 @@ def parse_photo_text(photo_text):
     prompt = '''
     You are a helpful assistant that reads extracted text data from an image. the image data is read using opencv and pytesseract, so they are slightly jumbled together. 
     Your task is to read the given text and identitfy entites like first name, last name, mobile number, gender, marital status, and date of birth (dob). If some details are not possible, ask the user to input it as text.  
-    Whatever entites you're able to identify, try to organize this information into a structured JSON object with the following format:
+    Whatever entites you're able to identify, try to organize this information into a structured JSON string with the following format:
     {
     "firstName": <value>,
     "lastName": <value>,
@@ -356,12 +356,13 @@ def parse_photo_text(photo_text):
     try:
         print(f"completion is {completion}\n\n")
         # print("completion is", completion, "\n\n")
-        response_text = completion.choices[0].message.content
-        print(f"response_text is {response_text}")
-        response = json.loads(response_text)
+        response = completion.choices[0].message.content
+        print(f"response_text is {response}")
+        print(type(response))
+        #response = json.loads(response)
     except Exception as e:
         print(e)
-        response = None
+        response = "Cannot read image. Input all details as text"
     return response
 
 def process_image(chat_id, image_data):
