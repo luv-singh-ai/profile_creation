@@ -89,7 +89,7 @@ async def language_handler(update: Update, context: CallbackContext):
 async def preferred_language_callback(update: Update, context: CallbackContext):
     
     callback_query = update.callback_query
-    languages = {"1": "en", "2": "hi", "3": "ma"}
+    languages = {"1": "en", "2": "hi", "3": "mr"}
     try:
         preferred_language = callback_query.data
         lang = languages.get(preferred_language)
@@ -106,7 +106,7 @@ async def preferred_language_callback(update: Update, context: CallbackContext):
         text_message = "You have chosen English. \nPlease share your details"
     elif lang == "hi":
         text_message = "आपने हिंदी चुनी है. \nकृपया मुझे अपने बारे में बताएं।"
-    elif lang == "ma":
+    elif lang == "mr":
         text_message = "तुम्ही मराठीची निवड केली आहे. \कृपया तुमचे तपशील शेअर करा"
         
     set_redis('lang', lang)
@@ -228,6 +228,7 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
     lang = context.user_data.get('lang')
     # getting audio file
     audio_file = voice
+    # audio_file = await context.bot.get_file(update.message.voice.file_id)
 
     if lang == 'en':
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=True) as temp_audio_file:
@@ -249,11 +250,12 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                     chat_id, audio_file=open(temp_audio_file.name, "rb")
                 )
                 response_audio.stream_to_file(temp_audio_file.name)
-                duration = get_duration_pydub(temp_audio_file.name) # error is "raise JSONDecodeError("Expecting value", s, err.value) from None"
+                # fix this error "raise JSONDecodeError("Expecting value", s, err.value) from None" here
+                # duration = get_duration_pydub(temp_audio_file.name)
                 await context.bot.send_audio(
                     chat_id=chat_id, 
                     audio=open(temp_audio_file.name, "rb"), 
-                    duration=duration, 
+                    #duration=duration, 
                     filename="response.wav",
                     performer="Yojana Didi",
                 )
@@ -262,7 +264,7 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                 )
                 file.close()
     else:
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=True) as temp_audio_file:
+        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=True) as temp_audio_file: # suffix='.wav'
             await audio_file.download_to_drive(custom_path=temp_audio_file.name)
             chat_id = update.effective_chat.id
 

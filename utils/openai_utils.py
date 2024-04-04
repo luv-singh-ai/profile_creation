@@ -203,9 +203,13 @@ def generate_audio(text, client):
     return response
 
 def get_duration_pydub(file_path):
-   audio_file = AudioSegment.from_file(file_path)
-   duration = audio_file.duration_seconds
-   return duration
+    try:
+        audio_file = AudioSegment.from_file(file_path)
+        duration = audio_file.duration_seconds
+        return duration
+    except Exception as e:
+        print(f"Error occurred while getting duration: {e}")
+        return None
 
 def get_random_wait_messages(not_always=False, lang="en"):
     messages = [

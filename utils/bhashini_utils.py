@@ -129,9 +129,12 @@ def bhashini_asr(audio_content, source_lang, target_lang):
         )[0].get(
             'target'
         )
+        print(f"answer from bhashini_asr is {answer}")
         return answer
     else:
-        return audio_content
+        print(f"else response from bhashini_asr is {audio_content}")
+        # return audio_content
+        return "Sorry, audio file could not be processed. Please try again."
 
 def bhashini_tts(text, lang):
     url = 'https://bhashini.ai/v1/synthesize'
