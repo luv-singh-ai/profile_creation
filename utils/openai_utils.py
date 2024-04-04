@@ -38,29 +38,29 @@ get_user_details = {
         "properties": {
             "firstName": {
                 "type": "string",
-                "description": "First Name"
+                "description": "First Name of Person"
             },
             "lastName": {
                 "type": "string",
-                "description": "Last Name"
+                "description": "Last Name of Person"
             },
             "mobile": {
                 "type": "string", # 'integer'
-                "description": "Mobile Number"
+                "description": "10 digit mobile number. If it has prefix '+91-' at start, then consider mobile number after prefix."
             },
             "gender":{
                 "type": "string",
-                "description": "gender where 'M' is for Male, 'F' is for Female, 'O' is for Others",
+                "description": "Identify gender mentions, recognizing terms for male, female, or other identities. For example, if a person identifies as male, female, or another gender, assign 'M', 'F', or 'O' respectively.",
                 "enum": ["M", "F", "O"], # M for Male, F for Female, O for Other
             },
             "maritalStatus": {
                 "type": "string",
-                "description": "Marital Status",
+                "description": "Marital Status of Person. For example, if a person is single, married, divorced, widowed, or other, assign 'Single', 'Married', 'Divorced', 'Widowed', or 'Others' respectively.",
                 "enum": ["Single", "Married", "Divorced", "Widowed", "Others"]
             },
             "dob": {
                 "type": "string",
-                "description": "Date of Birth"
+                "description": "Date of Birth of Person. Format is YYYY-MM-DD"
             }
         },
         "required": ["firstName", "LastName", "mobile", "gender", "maritalStatus", "dob"]
