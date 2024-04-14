@@ -32,7 +32,6 @@ from core.ai import (
     process_image
 )
 from utils.redis_utils import set_redis
-import os
 import pytesseract
 from PIL import Image
 from utils.openai_utils import (
