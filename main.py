@@ -102,11 +102,11 @@ async def preferred_language_callback(update: Update, context: CallbackContext):
     
     text_message = ""
     if lang == "en":
-        text_message = "You have chosen English. \nPlease share your details"
+        text_message = "You have chosen English. \nPlease share your details. What is your 10 digit mobile number?"
     elif lang == "hi":
-        text_message = "आपने हिंदी चुनी है. \nकृपया मुझे अपने बारे में बताएं।"
+        text_message = "आपने हिंदी चुनी है. \n कृपया मुझे अपने बारे में बताएं। आपका 10 अंकों वाला मोबाइल नंबर क्या है?"
     elif lang == "mr":
-        text_message = "तुम्ही मराठीची निवड केली आहे. \कृपया तुमचे तपशील शेअर करा"
+        text_message = "तुम्ही मराठीची निवड केली आहे. \n कृपया तुमचे तपशील शेअर करा। तुमचा 10 अंकी मोबाईल नंबर काय आहे?"
         
     set_redis('lang', lang)
     
@@ -169,6 +169,8 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, phot
             "Gorgeous! Now, send me your location please, or send /skip if you don't want to."
         )
     """
+    assistant_message = ""
+    chat_id = update.effective_chat.id
     lang = context.user_data.get('lang')
     
     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
@@ -187,8 +189,9 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, phot
             text = process_image(chat_id, photo_data) # file
             print(f"text is {text}")
             text_1 = parse_photo_text(text)
-            assistant_message = chat(chat_id, text_1)
-            
+            assistant_message, history = chat(chat_id, text_1)
+            print(f"assistant_message is {assistant_message}")
+            print(type(assistant_message))
             # response_photo, assistant_message, history = parse_photo_text(
             #     chat_id, photo_file=open(temp_image_file.name, "rb")
             # )
@@ -201,7 +204,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, phot
             #     performer="Yojana Didi",
             # )
             await context.bot.send_message(
-                chat_id=chat_id, text=assistant_message
+                chat_id=chat_id, text=assistant_message # try adding [0] if it doesn't work
             )
             file.close()
 
@@ -221,6 +224,7 @@ async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text:
         response, response_en, history = bhashini_text_chat(chat_id,text, lang)
     if response:
         await context.bot.send_message(chat_id=chat_id, text=response)
+    # set_redis(history, history)
     await context.bot.send_message(chat_id=chat_id, text=response_en)
 
 async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice):    

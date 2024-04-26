@@ -11,7 +11,10 @@ load_dotenv(
     dotenv_path="ops/.env",
 )
 
-with open("prompts/prompt.txt", "r") as file:
+# with open("prompts/prompt.txt", "r") as file:
+#     main_prompt = file.read().replace('\n', ' ')
+
+with open("prompts/prompt_v1.txt", "r") as file:
     main_prompt = file.read().replace('\n', ' ')
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -67,6 +70,94 @@ get_user_details = {
     }
 }
 
+# mini screening questions 
+get_family_details = {
+    "name": "get_family_details",
+    "description": "Get the user's family details namely, Person's Religion, Caste Category, Ration card type, and Land Ownership",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "Religion": {
+                "type": "string",
+                "description": "Get religion of person. For example, whether a person is following Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, Zoroastrians (Parsis), Not Applicable, Prefer not to say, or Other.",
+                "enum": ["Hinduism", "Islam", "Christianity", "Buddhism", "Jainism", "Sikhism", "Zoroastrians (Parsis)", "Not Applicable", "Prefer not to say", "Other"]
+            },
+            "Caste Category": {
+                "type": "string",
+                "description": "Get caste category of person. For example, whether a person belongs to General, SC, ST, OBC, Special Backward Class, Vimukta Jati-A/Denotified tribes-A, Nomadic tribes-B, Nomadic tribes-C, Nomadic tribes-D, or Other.",
+                "enum": ["General", "SC", "ST", "OBC", "SpecialBackwardClass", "VimuktaJati-A/Denotifiedtribes-A", "Nomadictribes-B", "Nomadictribes-C", "Nomadictribes-D", "Other"]
+            },
+            "Ration card type": {
+                "type": "string",
+                "description": "Get ration card type. For example, whether a person has Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, or Other ration card.",
+                "enum": ["Below Poverty Line", "Above Poverty Line", "Antyodaya Anna Yojana", "State BPL", "Annapurna scheme beneficiaries", "In process", "Not available", "Not Applicable", "Priority Household", "Other"]
+            },
+            "Land Ownership": {
+                "type": "string",
+                "description": "Get whether person owns any land. For example, whether a person owns any land under 3 categoeries - agricultural, non-agricultural land or landless.",
+                "enum": ["Yes - for agriculture", "Yes - for non agriculture", "No"]
+            }
+        },
+        "required": ["Religion", "Caste Category", "Ration card type", "Land Ownership"]
+    }
+}
+
+get_work_details = {
+    "name": "get_work_details",
+    "description": "Get the user's work details namely, Occupation, Nature of Job, and Personal monthly income",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "Occupation": {
+                "type": "string",
+                "description": "Get present occupational status. For example, whether a person is a Student, Working, Student and Working, Retired, Unemployed, School Dropouts, or has Other status.",
+                "enum": ["Student", "Working", "Student and Working", "Retired", "Unemployed", "School Dropouts", "Other"]
+            },
+            "Nature of Job": {
+                "type": "string",
+                "description": "Get person's Nature of Job status. For example, whether a person is a Anganwadi Helper, Blacksmith, Electrician, Scientist, etc.",
+                "enum": [
+                    "Anganwadi Helper", "Anganwadi worker", "Animal Husbandry", "Architect", "Artisan", "Auto/Taxi Driver",
+                    "Beautician", "Beedi workers", "Blacksmith", "Bonded Labour", "Brick factory worker", "Carpenter",
+                    "Chrome Ore worker", "Cine Worker", "Coconut tree climber", "Coir worker", "Construction worker",
+                    "Dairy Farmer", "Diver", "Dolomite mine worker", "Domestic help", "DTC Employee", "Electrician",
+                    "Ex-Serviceman of armed forces", "Factory Worker", "Farm Laborers", "Farmer", "Fish Sellers",
+                    "Fisherman", "Fitter or bar Bender", "Flaying", "Flower Sellers", "Fruit Sellers", "Garland Sellers",
+                    "Hammer-smith", "Handloom weaver", "Handicraftsmen/Dastkar", "Iron Ore worker", "Iron Smith",
+                    "Journalist", "Lawyer", "Lime industry worker", "Leather Industry / Cobbler", "Licensed Railway Porters",
+                    "Limestone mine worker", "Manganese Ore worker", "Manual scavenging", "Mason", "Mica mine worker",
+                    "Mine Worker", "Matt", "Mixerman / Sprayman", "Own business", "Organised Labour", "Painter",
+                    "Papad Rollers", "Petty Merchants", "Plumber", "Poultry farmer", "Powerloom worker", "Professor",
+                    "Pump Operator", "Rag Pickers", "Ration Shop Dealer", "Railworks Labourer", "Roller driver",
+                    "Rickshaw Drivers", "Sale/distribution of illegal liquor", "Salt worker", "Sanitation/Waste collection/Drainage/Manual Scavenging/Waste management etc",
+                    "Scientist", "Shop Worker", "Small Fabricators", "Soil worker", "Street vendor", "Stone Crusher",
+                    "Stone worker", "Tanning", "Teacher", "Toddy tapper", "Tunnel worker", "Vegetable Vendors",
+                    "Waste Picking", "Waste collection", "Watchman", "Welder", "Well digger", "Doctor", "Tea plantation worker",
+                    "Tiler (tiles work)", "Raj mistry", "Roof builder", "Mosaic polish", "Road builder", "Lift builder/stairs builder",
+                    "Community parks/side walk maker", "Establish Modular Units in Kitchen", "Accountant/clerk(construction site)",
+                    "Tailor", "Shepherd", "Milk vendor", "Newspaper hawker", "Daily wage Porter", "Contractual labour (excluding BOCW and ESI registered workers)",
+                    "Lorry Driver", "Maxi-cab Driver", "Bus Driver", "Beggar", "Kendu leaf collector", "Security guard",
+                    "Policemen", "Sex worker", "Washerman/Laundry", "Barber", "Unorganised Worker", "Contractual Employee",
+                    "House wife", "Artist", "Pottery", "Basket weaver", "Sweeper", "Religious priest", "Government",
+                    "TV/Internet/Phone Cable Operator", "Vehicle Fleet Operator", "Mechanic", "Delivery Agent",
+                    "Rickshaw Puller/Cycle Rickshaw/Hand Rickshaw/Auto", "Goldsmith/Silversmith", "Sculptor",
+                    "Armourer/Sword/Shield/Knife/Helmet/Traditional Tool Maker", "Boat Maker", "Locksmith",
+                    "Traditional Doll/Toy Maker", "Fish Net Maker", "ASHA/ health worker", "Cattle Keeper",
+                    "Retired (Government)", "Bee Keepers/Farmers", "Klin Worker", "Hamal", "Gardner", "Devadasi",
+                    "Fish farm worker/Fish processing centre workers/Crab hunters/owners of boats and traulers/employees of fish seed production centres",
+                    "Sugarcane cutting worker", "Paramilitary", "Armed forces", "Neera Collector", "Motor Transport worker",
+                    "Powerloom Weaver", "Driver", "Small and marginal farmer", "Other", "Not Applicable", "Not available"
+                ]
+            },
+            "Personal monthly income": {
+                "type": "integer",
+                "description": "Get the personal monthly income of the person."
+            }
+        },
+        "required": ["Occupation", "Nature of Job", "Personal monthly income"]
+    }
+}
+
 def create_assistant(client, assistant_id):
     try:
         assistant = client.beta.assistants.retrieve(assistant_id=assistant_id)
@@ -80,6 +171,14 @@ def create_assistant(client, assistant_id):
                 {
                     "type": "function",
                     "function": get_user_details # function_call = {'name': 'get_user_details'},
+                },
+                {
+                    "type": "function",
+                    "function": get_family_details # function_call = {'name': 'get_family_details'},
+                },
+                {
+                    "type": "function",
+                    "function": get_work_details # function_call = {'name': 'get_work_details'},
                 }
                 # {
                 #     "type": "retrieval",

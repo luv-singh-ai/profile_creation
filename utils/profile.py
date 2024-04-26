@@ -33,7 +33,10 @@ def profile_creation(parameters: dict) -> int:
     parameters.update(location_details)
     print(parameters)
     
-    payload = json.dumps(parameters)
+    try:
+        payload = json.dumps(parameters)
+    except Exception as e:
+        print(e)
     # payload = json.dumps({
     #     "firstName": "Shriram",
     #     "lastName": "Kanawade",
@@ -57,7 +60,12 @@ def profile_creation(parameters: dict) -> int:
 
     print(response.text) # it's in string format - {"code": 200, "message": "Success", "data": {"personId": 505099}}
     # type(response) is <class 'requests.models.Response'>
-    answer = json.loads(response.text)
+    try:
+        answer = json.loads(response.text)
+    except Exception as e:
+        print(e)
+        print(response.status_code)
+        return 0 # 0 for false profile creation
     try:
         if answer.get("code") == 200 and answer.get("message") == "Success":
             print("Done!")
@@ -72,7 +80,8 @@ def profile_creation(parameters: dict) -> int:
 #     message = profile_creation({}, "")
 #     print(message)
     
-def get_location_details(data):
+def get_location_details(data, lang, state_code = 27, district_code = 468 , sub_district_code = 45, village_code = 10, ulb_code = 251323, ward_code = 65537, pincode = 422603):
+    # sub_district_code = 45, village_code = 10 are random values
     # url = "https://testapi.haqdarshak.com/api/get_location_details"
     # payload = json.dumps(data)
   
@@ -85,7 +94,6 @@ def get_location_details(data):
         }
     response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_states&lang='+lang, headers=headers)
     states = response.json()['data']
-    
     
     headers = {
         'Authorization': 'Bearer ' + token,

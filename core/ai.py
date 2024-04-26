@@ -394,3 +394,4 @@ def process_image(chat_id, image_data):
     print(f"text from inside the func is {text}")
 
     return text
+
