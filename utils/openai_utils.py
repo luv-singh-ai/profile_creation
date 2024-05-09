@@ -112,7 +112,7 @@ get_work_details = {
                 "type": "string",
                 "description": "Get present occupational status. For example, whether a person is a Student, Working, Student and Working, Retired, Unemployed, School Dropouts, or has Other status.",
                 "enum": ["Student", "Working", "Student and Working", "Retired", "Unemployed", "School Dropouts", "Other"]
-            },
+            }, #keyboard option
             "Nature of Job": {
                 "type": "string",
                 "description": "Get person's Nature of Job status. For example, whether a person is a Anganwadi Helper, Blacksmith, Electrician, Scientist, etc.",
@@ -148,7 +148,8 @@ get_work_details = {
                     "Sugarcane cutting worker", "Paramilitary", "Armed forces", "Neera Collector", "Motor Transport worker",
                     "Powerloom Weaver", "Driver", "Small and marginal farmer", "Other", "Not Applicable", "Not available"
                 ]
-            },
+            }, # string dropdown using regex 
+            # partial string matching using difflib
             "Personal monthly income": {
                 "type": "integer",
                 "description": "Get the personal monthly income of the person."
@@ -199,44 +200,6 @@ def create_run(client, thread_id, assistant_id):
         assistant_id=assistant_id,
     )
     return run.id, run.status
-
-def run_with_streaming_responses(client, thread_id, assistant_id):
-    # to add streaming responses
-    from typing_extensions import override
-    from openai import AssistantEventHandler
-    # First, we create a EventHandler class to define
-    # how we want to handle the events in the response stream.
-    class EventHandler(AssistantEventHandler):    
-        @override
-        def on_text_created(self, text) -> None:
-            print(f"\nassistant > ", end="", flush=True)
-            
-        @override
-        def on_text_delta(self, delta, snapshot):
-            print(delta.value, end="", flush=True)
-        
-        def on_tool_call_created(self, tool_call):
-            print(f"\nassistant > {tool_call.type}\n", flush=True)
-        
-        def on_tool_call_delta(self, delta, snapshot):
-            if delta.type == 'code_interpreter':
-                if delta.code_interpreter.input:
-                    print(delta.code_interpreter.input, end="", flush=True)
-            if delta.code_interpreter.outputs:
-                print(f"\n\noutput >", flush=True)
-                for output in delta.code_interpreter.outputs:
-                    if output.type == "logs":
-                        print(f"\n{output.logs}", flush=True)
-    # Then, we use the `create_and_stream` SDK helper 
-    # with the `EventHandler` class to create the Run 
-    # and stream the response.
-    with client.beta.threads.runs.create_and_stream(
-        thread_id=thread_id,
-        assistant_id=assistant_id,
-        instructions="Please address the user as Jane Doe. The user has a premium account.",
-        event_handler=EventHandler(),
-    ) as stream:
-        stream.until_done()
 
 def upload_message(client, thread_id, input_message, assistant_id):
     message = client.beta.threads.messages.create(
@@ -329,7 +292,45 @@ def get_random_wait_messages(not_always=False, lang="en"):
         random_message = random.choice(messages)
         random_message = bhashini_translate(random_message, "en", lang)
     return random_message
-
+'''
+def run_with_streaming_responses(client, thread_id, assistant_id):
+    # to add streaming responses
+    from typing_extensions import override
+    from openai import AssistantEventHandler
+    # First, we create a EventHandler class to define
+    # how we want to handle the events in the response stream.
+    class EventHandler(AssistantEventHandler):    
+        @override
+        def on_text_created(self, text) -> None:
+            print(f"\nassistant > ", end="", flush=True)
+            
+        @override
+        def on_text_delta(self, delta, snapshot):
+            print(delta.value, end="", flush=True)
+        
+        def on_tool_call_created(self, tool_call):
+            print(f"\nassistant > {tool_call.type}\n", flush=True)
+        
+        def on_tool_call_delta(self, delta, snapshot):
+            if delta.type == 'code_interpreter':
+                if delta.code_interpreter.input:
+                    print(delta.code_interpreter.input, end="", flush=True)
+            if delta.code_interpreter.outputs:
+                print(f"\n\noutput >", flush=True)
+                for output in delta.code_interpreter.outputs:
+                    if output.type == "logs":
+                        print(f"\n{output.logs}", flush=True)
+    # Then, we use the `create_and_stream` SDK helper 
+    # with the `EventHandler` class to create the Run 
+    # and stream the response.
+    with client.beta.threads.runs.create_and_stream(
+        thread_id=thread_id,
+        assistant_id=assistant_id,
+        instructions="Please address the user as Jane Doe. The user has a premium account.",
+        event_handler=EventHandler(),
+    ) as stream:
+        stream.until_done()
+'''
 # raise_complaint ={
 #     "name": "raise_complaint",
 #     "description": "Raise complaint",

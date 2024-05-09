@@ -169,13 +169,12 @@ def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
         }
         return error, history
     
-def process_search_complaint_action(parameters, tool_id, thread_id, run_id):
+def mini_screening(parameters, tool_id, thread_id, run_id):
     """
-    
-    Run the search_complaint function and get the application_status when 
-    the action required is search_complaint
+    save the responses of mini screening questions 
 
     """
+    '''
     complaint = search_complaint(parameters)
     if complaint:
         application_status = complaint.get(
@@ -211,6 +210,7 @@ def process_search_complaint_action(parameters, tool_id, thread_id, run_id):
         return assistant_message, history
     else:
         return "Complaint not found", history
+    '''
 
 def compose_function_call_params(func_name, arguments):
     """

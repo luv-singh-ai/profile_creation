@@ -4,6 +4,11 @@ import json
 from datetime import date
 from pydantic import BaseModel, Field, validator
 from typing import Literal
+
+from utils.redis_utils import (
+    get_redis_value,
+    set_redis,
+)
 # Define a Pydantic model for user data
 class User(BaseModel):
     firstName: str = Field(..., min_length=1)
@@ -69,17 +74,50 @@ def profile_creation(parameters: dict) -> int:
     try:
         if answer.get("code") == 200 and answer.get("message") == "Success":
             print("Done!")
-            return answer.get("data")["personId"] # returns the person id of profile just created
+            PID = answer.get("data")["personId"]
+            set_redis(PID, PID)
+            return PID # returns the person id of profile just created
     except Exception as e:
         print(e)
         print(response.status_code)
         return 0 # 0 for false profile creation
 
+def mini_screening(PID):
+    url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
+    PID = get_redis_value(PID)
+    payload = json.dumps({
+    "personId": PID,
+    "answers": [
+        {
+        "concept": "CT0000OU",
+        "value": "CT0000OT"
+        },
+        {
+        "concept": "CT00003I",
+        "value": "LT000001"
+        },
+        {
+        "concept": "CT00001D",
+        "value": "CT00002D"
+        }
+    ]
+    })
+    headers = {
+    'token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE0MTQ1NjI5fQ.59HQnIt5iYaE9IVj8_zFd7ev7Kpp-pPHn1d0lJ5ZJio',
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
+
+
+
 # if __name__ == '__main__':
 #     message = ""
 #     message = profile_creation({}, "")
 #     print(message)
-    
+
 def get_location_details(data, lang, state_code = 27, district_code = 468 , sub_district_code = 45, village_code = 10, ulb_code = 251323, ward_code = 65537, pincode = 422603):
     # sub_district_code = 45, village_code = 10 are random values
     # url = "https://testapi.haqdarshak.com/api/get_location_details"
