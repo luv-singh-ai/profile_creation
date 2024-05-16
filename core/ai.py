@@ -297,11 +297,11 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
             )
             thread_id, run_id, status = set_metadata(chat_id, history)
         except:
-            print("escape route")
-            per = {"firstName": "Mukesh", "lastName": "Sharma", "mobile": "9897969594", "gender": "M", "maritalStatus": "Married", "dob": "1992-04-11"}
-            per_id = profile_creation(per)
-            assistant_message, history = f"person id created is {per_id}" , history # json.dumps(per)
-            thread_id, run_id, status = set_metadata(chat_id, history)
+            assistant_message = "there is an error"
+            # per = {"firstName": "Mukesh", "lastName": "Sharma", "mobile": "9897969594", "gender": "M", "maritalStatus": "Married", "dob": "1992-04-11"}
+            # per_id = profile_creation(per)
+            # assistant_message, history = f"person id created is {per_id}" , history # json.dumps(per)
+            # thread_id, run_id, status = set_metadata(chat_id, history)
 
     return assistant_message, history
 
