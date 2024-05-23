@@ -134,7 +134,7 @@ def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
     """
     id = profile_creation(parameters) # id is int
     if id != 0:
-        person_id = id
+        person_id = str(id)
         tool_output_array = [
             {
                 "tool_call_id": tool_id,

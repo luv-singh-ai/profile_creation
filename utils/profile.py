@@ -58,7 +58,7 @@ def profile_creation(parameters: dict) -> int:
     # })
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE0MTQ1NjI5fQ.59HQnIt5iYaE9IVj8_zFd7ev7Kpp-pPHn1d0lJ5ZJio'
+        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE5MDc3NzI3fQ.d6stzRn1Z1fAyG62Ok6xW_agThq48GORcny5SC8v3g4'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -99,9 +99,8 @@ def generate_token():
     response = requests.request("POST", url, headers=headers, data=payload)
     # token = response
     
-return response.text
+    return response.text
 
-    
 def mini_screening(PID):
     url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
     PID = get_redis_value(PID)

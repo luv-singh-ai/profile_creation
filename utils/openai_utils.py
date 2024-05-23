@@ -239,7 +239,15 @@ def get_tools_to_call(client, thread_id, run_id):
         run_id=run_id,
         thread_id=thread_id
     )
-    tools_to_call = run.required_action.submit_tool_outputs.tool_calls ###
+    tools_to_call = run.required_action.submit_tool_outputs.tool_calls
+    print(f"tools to call are {tools_to_call}")
+    print()
+    print(f"run id is {run_id}")
+    print()
+    print(f"thread id is {thread_id}")
+    print()
+    if tools_to_call is None:
+        print("No tools to call")
     return tools_to_call, run.id, run.status
 
 def get_assistant_message(client, thread_id):
