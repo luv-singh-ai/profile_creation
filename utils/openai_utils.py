@@ -180,8 +180,8 @@ def get_tools_to_call(client, thread_id, run_id):
     if run_id is not None:
         tools_to_call = run.required_action.submit_tool_outputs.tool_calls
         print(type(tools_to_call))
-    else:
-        tools_to_call = [get_user_details] # check
+    # else:
+    #     tools_to_call = [get_user_details] # check
     return tools_to_call, run.id, run.status
 
 def get_assistant_message(client, thread_id):
