@@ -63,7 +63,7 @@ get_user_details = {
                 "description": "Date of Birth of Person. Format is YYYY-MM-DD"
             }
         },
-        "required": ["firstName", "LastName", "mobile", "gender", "maritalStatus", "dob"]
+        "required": ["firstName", "lastName", "mobile", "gender", "maritalStatus", "dob"]
     }
 }
 
