@@ -82,6 +82,26 @@ def profile_creation(parameters: dict) -> int:
         print(response.status_code)
         return 0 # 0 for false profile creation
 
+def generate_token():
+
+    url = "https://testapi.haqdarshak.com/api/generate_token"
+
+    payload = json.dumps({
+    "api_key": "346ca1a3fb416f084b8e737970f57751",
+    "secret_key": "358567b4d67e639bbb02bb02e6df58605eed447a",
+    "state_code": "MH",
+    "agent_id": "451"
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    # token = response
+    
+return response.text
+
+    
 def mini_screening(PID):
     url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
     PID = get_redis_value(PID)
