@@ -42,23 +42,24 @@ def profile_creation(parameters: dict) -> int:
         payload = json.dumps(parameters)
     except Exception as e:
         print(e)
-    # payload = json.dumps({
-    #     "firstName": "Shriram",
-    #     "lastName": "Kanawade",
-    #     "mobile": "7020922248",
-    #     "gender": "M",
-    #     "maritalStatus": "Married",
-    #     "dob": "1992-04-11",
-    #     "state": 27,
-    #     "district": 468,
-    #     "livingType": "urban",
-    #     "ulb": 251323,
-    #     "ward": 65537,
-    #     "pincode": "422603"
-    # })
+        # payload = json.dumps({
+        #     "firstName": "Shriram",
+        #     "lastName": "Kanawade",
+        #     "mobile": "7020922248",
+        #     "gender": "M",
+        #     "maritalStatus": "Married",
+        #     "dob": "1992-04-11",
+        #     "state": 27,
+        #     "district": 468,
+        #     "livingType": "urban",
+        #     "ulb": 251323,
+        #     "ward": 65537,
+        #     "pincode": "422603"
+        # })
+    token = generate_token()
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE5MDc3NzI3fQ.d6stzRn1Z1fAyG62Ok6xW_agThq48GORcny5SC8v3g4'
+        'Authorization': f'Bearer {token}'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -82,7 +83,7 @@ def profile_creation(parameters: dict) -> int:
         print(response.status_code)
         return 0 # 0 for false profile creation
 
-def generate_token():
+def generate_token() -> int:
 
     url = "https://testapi.haqdarshak.com/api/generate_token"
 
@@ -97,9 +98,9 @@ def generate_token():
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    # token = response
-    
-    return response.text
+    token_res = json.loads(response.text)
+    token = token_res.get("token")
+    return token
 
 def mini_screening(PID):
     url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
