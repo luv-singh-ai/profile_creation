@@ -1,8 +1,3 @@
-# Mr Nags
-
-Mr Nags is a complaint filing chatbot using egov digit platform.
-
-
 ## Installation
 
 1. Create a file `.env` inside `ops` directory and add the following lines to it:
@@ -37,9 +32,9 @@ Mr Nags is a complaint filing chatbot using egov digit platform.
 
 ## Usage
 
-1. To start a conversation with the bot, start having a conversation by saying hey, hello or I have a complaint
+1. To start a conversation with the bot, start having a conversation by saying hey, hello.
 2. Start by typing '/start' and then select your language from the dropdown menu.
-3. The bot will ask you to describe your details
+3. The bot will ask you to describe your details like name, gender, DOB and like
 4. Once you have described your details, the bot will create a profile for you.
 
 
