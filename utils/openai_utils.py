@@ -164,6 +164,7 @@ def create_assistant(client, assistant_id):
         assistant = client.beta.assistants.retrieve(assistant_id=assistant_id)
         return assistant
     except Exception as e:
+        # or create a assistant ID in openai playground and use that everytime
         assistant = client.beta.assistants.create(
         name="AI Assistant",
         instructions=main_prompt,

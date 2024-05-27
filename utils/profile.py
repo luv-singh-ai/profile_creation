@@ -56,6 +56,7 @@ def profile_creation(parameters: dict) -> int:
         #     "ward": 65537,
         #     "pincode": "422603"
         # })
+    # crating new auth token 
     token = generate_token()
     headers = {
         'Content-Type': 'application/json',
@@ -122,9 +123,10 @@ def mini_screening(PID):
         }
     ]
     })
+    token = generate_token()
     headers = {
-    'token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE0MTQ1NjI5fQ.59HQnIt5iYaE9IVj8_zFd7ev7Kpp-pPHn1d0lJ5ZJio',
-    'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
