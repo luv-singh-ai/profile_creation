@@ -129,7 +129,7 @@ def gather_user_details(input_message, history, assistant_id):
     return assistant_message, history
 
 
-def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
+def process_profile(parameters, tool_id, thread_id, run_id):
     """
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
@@ -201,11 +201,10 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
     """
     save the responses of full details
     """
-    PID = get_redis_value(PID)
+    PID = get_redis_value(PID) # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
     details = process_parameters(parameters)
     ans = mini_screening(PID, details)
 
-    
     if ans: # if ans is True
         print(ans)
         tool_output_array = [
@@ -253,10 +252,10 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             func_name, tool.function.arguments
         )
         if func_name == "get_user_details":
-            assistant_message, history = process_creating_profile_action(
+            assistant_message, history = process_profile(
                 parameters, tool.id, thread_id, run_id
             )
-        elif func_name == "get_family_details":
+        elif func_name == "get_full_details":
             assistant_message, history = process_full_details(
                 parameters, tool.id, thread_id, run_id
             )
