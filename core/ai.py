@@ -170,15 +170,41 @@ def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
         }
         return error, history
 
+def process_parameters(parameters):
+    # The JSON string containing the function arguments
+    '''
+    parameters = 
+    {
+    "Religion(CT0000OU)": "Hinduism(CT0000OT)",
+    "Caste Category(CT00003I)": "OBC(LT000004)",
+    "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
+    "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
+    "Occupational Status(CT0000PF)": "Working(CT00019G)",
+    "Nature of Job(CT000015)": "Farmer(CT0000BU)"
+    }
+    '''
+
+    # Parse the JSON string into a dictionary
+    params = json.loads(parameters)
+
+    # Extracting the concept codes and their values
+    output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
+
+    if isinstance(output, list):
+        # Print the output list of dictionaries
+        print(json.dumps(output, indent=2))
+        return output
+    else:
+        return False
+    
 def process_full_details(parameters, tool_id, thread_id, run_id):
     """
     save the responses of full details
     """
-    if isinstance(parameters, list):
-        PID = get_redis_value(PID)
-        ans = mini_screening(PID, parameters)
-    else:
-        print("Parameters error")
+    PID = get_redis_value(PID)
+    details = process_parameters(parameters)
+    ans = mini_screening(PID, details)
+
     
     if ans: # if ans is True
         print(ans)
@@ -216,24 +242,6 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
         }
         return error, history
 
-def compose_function_call_params(func_name, arguments):
-    """
-    Compose function call parameters based on the args
-    provided by openAI function calling API
-    """
-    # auth_token = get_auth_token(
-    #         {
-    #             "username": USERNAME,
-    #             "password": PASSWORD
-    #         }
-    # )
-    print(f"function name is {func_name}")
-    parameters = json.loads(arguments)
-    # parameters["auth_token"] = auth_token
-    # parameters["username"] = username
-    return parameters
-
-
 def process_function_calls(tools_to_call, thread_id, run_id):
     """
     Method to manage all function calls using openAI
@@ -260,6 +268,18 @@ def process_function_calls(tools_to_call, thread_id, run_id):
                 "status": "requires_action",
             }
     return assistant_message, history
+
+def compose_function_call_params(func_name, arguments):
+    """
+    Compose function call parameters based on the args
+    provided by openAI function calling API
+    """
+    print(f"function name is {func_name}")
+    parameters = json.loads(arguments)
+    # parameters["auth_token"] = auth_token
+    # parameters["username"] = username
+    return parameters
+
 
 # def get_miniscreening_questions():
 #     url = "http://testapi.haqdarshak.com/api/get_miniscreening_questions_api"
