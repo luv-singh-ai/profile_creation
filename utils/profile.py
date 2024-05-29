@@ -103,12 +103,16 @@ def generate_token() -> int:
     token = token_res.get("token")
     return token
 
-def mini_screening(PID):
+def mini_screening(PID, details):
     url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
     PID = get_redis_value(PID)
     payload = json.dumps({
     "personId": PID,
-    "answers": [
+    "answers": details
+    })
+    '''
+    # details is a dictionary
+    [
         {
         "concept": "CT0000OU",
         "value": "CT0000OT"
@@ -122,7 +126,7 @@ def mini_screening(PID):
         "value": "CT00002D"
         }
     ]
-    })
+    '''
     token = generate_token()
     headers = {
         'Content-Type': 'application/json',
@@ -132,6 +136,8 @@ def mini_screening(PID):
     response = requests.request("POST", url, headers=headers, data=payload)
 
     print(response.text)
+    
+    return True
 
 
 

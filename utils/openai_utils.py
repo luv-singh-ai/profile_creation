@@ -14,7 +14,7 @@ load_dotenv(
 # with open("prompts/prompt.txt", "r") as file:
 #     main_prompt = file.read().replace('\n', ' ')
 
-with open("prompts/prompt_v1.txt", "r") as file:
+with open("prompts/prompt_v2.txt", "r") as file:
     main_prompt = file.read().replace('\n', ' ')
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
