@@ -71,91 +71,97 @@ get_user_details = {
 }
 
 # mini screening questions 
-get_family_details = {
-    "name": "get_family_details",
-    "description": "Get the user's family details namely, Person's Religion, Caste Category, Ration card type, and Land Ownership",
+get_full_details = {
+    "name": "get_full_details",
+    "description": "Get the user's full details namely, family details like Person's Religion, Caste Category, Ration card type, and Land Ownership, AND get their work details like Occupation, Nature of Job, and Personal monthly income",
     "parameters": {
         "type": "object",
         "properties": {
-            "Religion": {
+            "Religion(CT0000OU)": {
                 "type": "string",
-                "description": "Get religion of person. For example, whether a person is following Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, Zoroastrians (Parsis), Not Applicable, Prefer not to say, or Other.",
-                "enum": ["Hinduism", "Islam", "Christianity", "Buddhism", "Jainism", "Sikhism", "Zoroastrians (Parsis)", "Not Applicable", "Prefer not to say", "Other"]
-            },
-            "Caste Category": {
-                "type": "string",
-                "description": "Get caste category of person. For example, whether a person belongs to General, SC, ST, OBC, Special Backward Class, Vimukta Jati-A/Denotified tribes-A, Nomadic tribes-B, Nomadic tribes-C, Nomadic tribes-D, or Other.",
-                "enum": ["General", "SC", "ST", "OBC", "SpecialBackwardClass", "VimuktaJati-A/Denotifiedtribes-A", "Nomadictribes-B", "Nomadictribes-C", "Nomadictribes-D", "Other"]
-            },
-            "Ration card type": {
-                "type": "string",
-                "description": "Get ration card type. For example, whether a person has Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, or Other ration card.",
-                "enum": ["Below Poverty Line", "Above Poverty Line", "Antyodaya Anna Yojana", "State BPL", "Annapurna scheme beneficiaries", "In process", "Not available", "Not Applicable", "Priority Household", "Other"]
-            },
-            "Land Ownership": {
-                "type": "string",
-                "description": "Get whether person owns any land. For example, whether a person owns any land under 3 categoeries - agricultural, non-agricultural land or landless.",
-                "enum": ["Yes - for agriculture", "Yes - for non agriculture", "No"]
-            }
-        },
-        "required": ["Religion", "Caste Category", "Ration card type", "Land Ownership"]
-    }
-}
-
-get_work_details = {
-    "name": "get_work_details",
-    "description": "Get the user's work details namely, Occupation, Nature of Job, and Personal monthly income",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "Occupation": {
-                "type": "string",
-                "description": "Get present occupational status. For example, whether a person is a Student, Working, Student and Working, Retired, Unemployed, School Dropouts, or has Other status.",
-                "enum": ["Student", "Working", "Student and Working", "Retired", "Unemployed", "School Dropouts", "Other"]
-            }, #keyboard option
-            "Nature of Job": {
-                "type": "string",
-                "description": "Get person's Nature of Job status. For example, whether a person is a Anganwadi Helper, Blacksmith, Electrician, Scientist, etc.",
+                "description": "Get religion of person under Family Details. For example, whether a person is following Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, Zoroastrians (Parsis), Not Applicable, Prefer not to say, or Other.",
                 "enum": [
-                    "Anganwadi Helper", "Anganwadi worker", "Animal Husbandry", "Architect", "Artisan", "Auto/Taxi Driver",
-                    "Beautician", "Beedi workers", "Blacksmith", "Bonded Labour", "Brick factory worker", "Carpenter",
-                    "Chrome Ore worker", "Cine Worker", "Coconut tree climber", "Coir worker", "Construction worker",
-                    "Dairy Farmer", "Diver", "Dolomite mine worker", "Domestic help", "DTC Employee", "Electrician",
-                    "Ex-Serviceman of armed forces", "Factory Worker", "Farm Laborers", "Farmer", "Fish Sellers",
-                    "Fisherman", "Fitter or bar Bender", "Flaying", "Flower Sellers", "Fruit Sellers", "Garland Sellers",
-                    "Hammer-smith", "Handloom weaver", "Handicraftsmen/Dastkar", "Iron Ore worker", "Iron Smith",
-                    "Journalist", "Lawyer", "Lime industry worker", "Leather Industry / Cobbler", "Licensed Railway Porters",
-                    "Limestone mine worker", "Manganese Ore worker", "Manual scavenging", "Mason", "Mica mine worker",
-                    "Mine Worker", "Matt", "Mixerman / Sprayman", "Own business", "Organised Labour", "Painter",
-                    "Papad Rollers", "Petty Merchants", "Plumber", "Poultry farmer", "Powerloom worker", "Professor",
-                    "Pump Operator", "Rag Pickers", "Ration Shop Dealer", "Railworks Labourer", "Roller driver",
-                    "Rickshaw Drivers", "Sale/distribution of illegal liquor", "Salt worker", "Sanitation/Waste collection/Drainage/Manual Scavenging/Waste management etc",
-                    "Scientist", "Shop Worker", "Small Fabricators", "Soil worker", "Street vendor", "Stone Crusher",
-                    "Stone worker", "Tanning", "Teacher", "Toddy tapper", "Tunnel worker", "Vegetable Vendors",
-                    "Waste Picking", "Waste collection", "Watchman", "Welder", "Well digger", "Doctor", "Tea plantation worker",
-                    "Tiler (tiles work)", "Raj mistry", "Roof builder", "Mosaic polish", "Road builder", "Lift builder/stairs builder",
-                    "Community parks/side walk maker", "Establish Modular Units in Kitchen", "Accountant/clerk(construction site)",
-                    "Tailor", "Shepherd", "Milk vendor", "Newspaper hawker", "Daily wage Porter", "Contractual labour (excluding BOCW and ESI registered workers)",
-                    "Lorry Driver", "Maxi-cab Driver", "Bus Driver", "Beggar", "Kendu leaf collector", "Security guard",
-                    "Policemen", "Sex worker", "Washerman/Laundry", "Barber", "Unorganised Worker", "Contractual Employee",
-                    "House wife", "Artist", "Pottery", "Basket weaver", "Sweeper", "Religious priest", "Government",
-                    "TV/Internet/Phone Cable Operator", "Vehicle Fleet Operator", "Mechanic", "Delivery Agent",
-                    "Rickshaw Puller/Cycle Rickshaw/Hand Rickshaw/Auto", "Goldsmith/Silversmith", "Sculptor",
-                    "Armourer/Sword/Shield/Knife/Helmet/Traditional Tool Maker", "Boat Maker", "Locksmith",
-                    "Traditional Doll/Toy Maker", "Fish Net Maker", "ASHA/ health worker", "Cattle Keeper",
-                    "Retired (Government)", "Bee Keepers/Farmers", "Klin Worker", "Hamal", "Gardner", "Devadasi",
-                    "Fish farm worker/Fish processing centre workers/Crab hunters/owners of boats and traulers/employees of fish seed production centres",
-                    "Sugarcane cutting worker", "Paramilitary", "Armed forces", "Neera Collector", "Motor Transport worker",
-                    "Powerloom Weaver", "Driver", "Small and marginal farmer", "Other", "Not Applicable", "Not available"
+                    "Hinduism(CT0000OT)", 
+                    "Islam(CT000036)", 
+                    "Christianity(CT000039)", 
+                    "Buddhism(CT00003A)", 
+                    "Jainism(CT00003C)", 
+                    "Sikhism(CT000037)", 
+                    "Zoroastrians (Parsis)(CT00003B)", 
+                    "Not Applicable(CT0001QF)", 
+                    "Prefer not to say(CT0005BC)", 
+                    "Other(CT00004W)"
                 ]
-            }, # string dropdown using regex 
+            },
+            "Caste Category(CT00003I)": {
+                "type": "string",
+                "description": "Get caste category of person under Family Details. For example, whether a person belongs to General, SC, ST, OBC, Special Backward Class, Vimukta Jati-A/Denotified tribes-A, Nomadic tribes-B, Nomadic tribes-C, Nomadic tribes-D, or Other.",
+                "enum": [
+                    "General(LT000001)", 
+                    "SC(LT000002)", 
+                    "ST(LT000003)", 
+                    "OBC(LT000004)", 
+                    "Special Backward Class(LT000005)", 
+                    "Vimukta Jati-A/Denotified tribes-A(LT000006)", 
+                    "Nomadic tribes-B(LT000007)", 
+                    "Nomadic tribes-C(LT000008)", 
+                    "Nomadic tribes-D(LT000009)", 
+                    "Other(LT00000A)"
+                ]
+            },
+            "Ration card type(CT00001D)": {
+                "type": "string",
+                "description": "Get type of ration card held by the family. For example, whether it is Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, or Other.",
+                "enum": [
+                    "Below Poverty Line(CT00002D)", 
+                    "Above Poverty Line(CT00002C)", 
+                    "Antyodaya Anna Yojana(CT0000OH)", 
+                    "State BPL(CT000129)", 
+                    "Annapurna scheme beneficiaries(CT0001HR)", 
+                    "In process(CT0000U6)", 
+                    "Not available(CT000068)", 
+                    "Not Applicable(CT0001QF)", 
+                    "Priority Household(CT0005BF)", 
+                    "Other(CT00004W)"
+                ]
+            },
+            "Land Ownership(CT0001AJ)": {
+                "type": "string",
+                "description": "Get land ownership status under Family Details. For example, whether any family members own land for agriculture, non-agriculture, or do not own any land.",
+                "enum": [
+                    "Yes - for agriculture(CT0001AH)", 
+                    "Yes - for non-agriculture(CT0001AI)", 
+                    "No(CT00003K)"
+                ]
+            },
+            "Occupational Status(CT0000PF)": {
+                "type": "string",
+                "description": "Get the present occupational status of the person. For example, whether they are a Student, Working, Student and Working, Retired, Unemployed, or School Dropout.",
+                "enum": [
+                    "Student(CT0000P8)", 
+                    "Working(CT00019G)", 
+                    "Student and Working(CT0001AA)", 
+                    "Retired(CT0000PV)", 
+                    "Unemployed(CT0000PD)", 
+                    "School Dropout(CT0001TY)"
+                ]
+            },
+            "Personal Monthly Income(CT000013)": {
+                "type": "number",
+                "description": "Get the personal monthly income of the person. Enter the amount in local currency."
+            },
+            #keyboard option
+            "Nature of Job(CT000015)": {
+                "type": "string",
+                "description": "Get occupation status under Work Details.",
+                "enum": [
+                    "Anganwadi Helper(CT0001I1)", "Anganwadi worker(CT0001HP)", "Animal Husbandry(CT0001KU)", "Architect(CT0001M0)", "Artisan(CT00019H)", "Auto/Taxi Driver(CT0001H9)", "Beautician(CT0002X2)", "Beedi workers(CT00004U)", "Blacksmith(CT0001NK)", "Bonded Labour(CT0001MW)", "Brick factory worker(CT0001NT)", "Carpenter(CT0001NA)", "Chrome Ore worker(CT0001HM)", "Cine Worker(CT0001BA)", "Coconut tree climber(CT0001PP)", "Coir worker(CT0001PI)", "Construction worker(CT00004R)", "Dairy Farmer(CT00015H)", "Diver(CT0001NJ)", "Dolomite mine worker(CT0001HO)", "Domestic help(CT00004T)", "DTC Employee(CT0001PQ)", "Electrician(CT0001NE)", "Ex-Serviceman of armed forces(CT0001IH)", "Factory Worker(CT0001M5)", "Farm Laborers(CT0000A7)", "Farmer(CT0000BU)", "Fish Sellers(CT00009X)", "Fisherman(CT0001JX)", "Fitter or bar Bender(CT0001NC)", "Flaying(CT00010J)", "Flower Sellers(CT00009Z)", "Fruit Sellers(CT00009Y)", "Garland Sellers(CT0000A0)", "Hammer-smith(CT0001NL)", "Handloom weaver(CT00004S)", "Handicraftsmen/Dastkar(CT000108)", "Iron Ore worker(CT0001HK)", "Iron Smith(CT000127)", "Journalist(CT0001LP)", "Lawyer(CT0001OW)", "Lime industry worker(CT0001NU)", "Leather Industry / Cobbler(CT0001AK)", "Licensed Railway Porters(CT0001H8)", "Limestone mine worker(CT0001HN)", "Manganese Ore worker(CT0001HL)", "Manual scavenging(CT00010M)", "Mason(CT0001N9)", "Mica mine worker(CT0001PN)", "Mine Worker(CT0001BB)", "Mixerman / Sprayman(CT0001NI)", "Own business(CT0000PA)", "Organised Labour(CT0001K7)", "Painter(CT0001NB)", "Papad Rollers(CT0000A2)", "Petty Merchants(CT0000A9)", "Plumber(CT0001ND)", "Poultry farmer(CT0001RE)", "Powerloom worker(CT00019K)", "Professor(CT0001LM)", "Pump Operator(CT0001NM)", "Rag Pickers(CT0000A1)", "Ration Shop Dealer(CT0001LW)", "Railworks Labourer(CT0001NO)", "Roller driver(CT0001NN)", "Rickshaw Drivers(CT0000AA)", "Sale/distribution of illegal liquor(CT00017Q)", "Salt worker(CT00014C)", "Sanitation/Waste collection/Drainage/Manual Scavenging/Waste management etc(CT00019P)", "Scientist(CT0001LN)", "Shop Worker(CT0001M6)", "Small Fabricators(CT0000A8)", "Soil worker(CT0001NS)", "Street vendor(CT00004V)", "Stone Crusher(CT0001LO)", "Stone worker(CT0001NR)", "Tanning(CT00010I)", "Teacher(CT0001JT)", "Toddy tapper(CT0001IQ)", "Tunnel worker(CT0001NQ)", "Vegetable Vendors(CT00009W)", "Waste Picking(CT00010K)", "Waste collection(CT00010L)", "Watchman(CT0001NP)", "Welder(CT0001NG)", "Well digger(CT0001NF)", "Doctor(CT0001RS)", "Tea plantation worker(CT0001RV)", "Tiler (tiles work)(CT0001S6)", "Raj mistry(CT0001S3)", "Roof builder(CT0001S2)", "Mosaic polish(CT0001S4)", "Road builder(CT0001S5)", "Lift builder/stairs builder(CT0001S7)", "Community parks/side walk maker(CT0001S8)", "Establish Modular Units in Kitchen(CT0001S9)", "Accountant/clerk(construction site)(CT0001SA)", "Tailor(CT0001SC)", "Shepherd(CT0001SF)", "Milk vendor(CT0001SE)", "Newspaper hawker(CT0001SD)", "Daily wage Porter(CT0001SH)", "Contractual labour (excluding BOCW and ESI registered workers)(CT0001SG)", "Lorry Driver(CT0001SP)", "Maxi-cab Driver(CT0001SR)", "Bus Driver(CT0001SQ)", "Beggar(CT0001TR)", "Kendu leaf collector(CT0001TS)", "Security guard(CT0001U2)", "Policemen(CT0001TX)", "Sex worker(CT0001TW)", "Washerman/Laundry(CT0001Z4)", "Barber(CT0001Z3)", "Unorganised Worker(CT00030K)", "Contractual Employee(CT0003KN)", "House wife(CT0000PC)", "Artist(CT0005W2)", "Pottery(CT0005WV)", "Basket weaver(CT0005WW)", "Sweeper(CT0005O7)", "Religious priest(CT0005X8)", "Government(CT00005M)", "TV/Internet/Phone Cable Operator(CT0005Z3)", "Vehicle Fleet Operator(CT0005Z9)", "Mechanic(CT0005ZA)", "Delivery Agent(CT0004Q9)", "Rickshaw Puller/Cycle Rickshaw/Hand Rickshaw/Auto(CT0005ZL)", "Goldsmith/Silversmith(CT000605)", "Sculptor(CT000609)", "Armourer/Sword/Shield/Knife/Helmet/Traditional Tool Maker(CT000608)", "Boat Maker(CT000607)", "Locksmith(CT00060B)", "Traditional Doll/Toy Maker(CT00060A)", "Fish Net Maker(CT000606)", "ASHA/ health worker(CT000615)", "Cattle Keeper(CT000622)", "Retired (Government)(CT000629)", "Bee Keepers/Farmers(CT00062W)", "Klin Worker(CT00063C)", "Hamal(CT00063B)", "Gardner(CT00063H)", "Devadasi(CT00063N)", "Fish farm worker/Fish processing centre workers/Crab hunters/owners of boats and traulers/employees of fish seed production centres(CT00063S)", "Sugarcane cutting worker(CT000650)", "Paramilitary(CT000651)", "Armed forces(CT0001UB)", "Neera Collector(CT000657)", "Motor Transport worker(CT00065A)", "Powerloom Weaver(CT00065Z)", "Driver(CT0001JC)", "Small and marginal farmer(CT00066O)"
+                ]
+            },
+            # string dropdown using regex 
             # partial string matching using difflib
-            "Personal monthly income": {
-                "type": "integer",
-                "description": "Get the personal monthly income of the person."
-            }
         },
-        "required": ["Occupation", "Nature of Job", "Personal monthly income"]
+        "required": ["Religion(CT0000OU)", "Caste Category(CT00003I)", "Ration card type(CT00001D)", "Land Ownership(CT0001AJ), Occupational Status(CT0000PF),Nature of Job(CT000015), Personal Monthly Income(CT000013)"]
     }
 }
 
@@ -176,11 +182,7 @@ def create_assistant(client, assistant_id):
                 },
                 {
                     "type": "function",
-                    "function": get_family_details # function_call = {'name': 'get_family_details'},
-                },
-                {
-                    "type": "function",
-                    "function": get_work_details # function_call = {'name': 'get_work_details'},
+                    "function": get_full_details # function_call = {'name': 'get_full_details'},
                 }
                 # {
                 #     "type": "retrieval",
