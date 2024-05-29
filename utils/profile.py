@@ -105,7 +105,7 @@ def generate_token() -> int:
 
 def mini_screening(PID, details):
     url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
-    PID = get_redis_value(PID)
+    # PID = get_redis_value(PID)
     payload = json.dumps({
     "personId": PID,
     "answers": details
@@ -185,12 +185,12 @@ def get_location_details(data, lang, state_code = 27, district_code = 468 , sub_
     response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_sub_districts_by_district&district_code='+district_code+'&lang='+lang, headers=headers)
     subDistricts = response.json()['data']
     
-    headers = {
-        'Authorization': 'Bearer ' + token,
-        'content-type': 'application/json',
-        'User-Agent': '*/*'
-        }
-    response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_villages_by_block_sub_district&sub_district_code='+sub_district_code+'&block_code='+block_code+'&lang='+lang, headers=headers)
+    # headers = {
+    #     'Authorization': 'Bearer ' + token,
+    #     'content-type': 'application/json',
+    #     'User-Agent': '*/*'
+    #     }
+    # response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_villages_by_block_sub_district&sub_district_code='+sub_district_code+'&block_code='+block_code+'&lang='+lang, headers=headers)
     villages = response.json()['data']
     
     headers = {

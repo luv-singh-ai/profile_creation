@@ -30,7 +30,8 @@ from utils.bhashini_utils import (
 )
 
 from utils.profile import (
-    profile_creation
+    profile_creation,
+    mini_screening
 )
 
 import os
@@ -169,50 +170,51 @@ def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
         }
         return error, history
 
-def get_family_details(parameters, tool_id, thread_id, run_id):
+def process_full_details(parameters, tool_id, thread_id, run_id):
     """
-    save the responses of family details
-
+    save the responses of full details
     """
-    
-    param = parameters.update(parameters) 
-    
-    # complaint = search_complaint(parameters)
-    # if complaint:
-    #     application_status = complaint.get(
-    #         "ServiceWrappers", []
-    #     )[0].get(
-    #         "service", {}
-    #     ).get("applicationStatus")
-    #     tool_output_array = [
-    #         {
-    #             "tool_call_id": tool_id,
-    #             "output": application_status
-    #         }
-    #     ]
-    #     run = client.beta.threads.runs.submit_tool_outputs(
-    #         thread_id=thread_id,
-    #         run_id=run_id,
-    #         tool_outputs=tool_output_array
-    #     )
-    #     run_id, status = get_run_status(client, thread_id, run.id)
-
-    if status == "completed":
-        assistant_message = get_assistant_message(client, thread_id)
+    if isinstance(parameters, list):
+        PID = get_redis_value(PID)
+        ans = mini_screening(PID, parameters)
     else:
-        assistant_message = "something went wrong please check the openAI API"
-
-    print(f"assistant message is {assistant_message}")
-
-    history = {
-        "thread_id": thread_id,
-        "run_id": run_id,
-        "status": status,
-    }
-    return assistant_message, history
-    else:
-        return "details not found", history
+        print("Parameters error")
     
+    if ans: # if ans is True
+        print(ans)
+        tool_output_array = [
+            {
+                "tool_call_id": tool_id,
+                "output": True
+            }
+        ]
+        run = client.beta.threads.runs.submit_tool_outputs(
+                thread_id=thread_id,
+                run_id=run_id,
+                tool_outputs=tool_output_array
+        )
+        run_id, status = get_run_status(client, thread_id, run.id)
+
+        if status == "completed":
+            assistant_message = get_assistant_message(client, thread_id)
+        else:
+            assistant_message = "something went wrong please check the openAI API"
+        print(f"assistant message is {assistant_message}")
+
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": status,
+        }
+        return assistant_message, history
+    else:
+        error = "Profile creation failed. Please try again later."
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": "failed",
+        }
+        return error, history
 
 def compose_function_call_params(func_name, arguments):
     """
@@ -247,11 +249,7 @@ def process_function_calls(tools_to_call, thread_id, run_id):
                 parameters, tool.id, thread_id, run_id
             )
         elif func_name == "get_family_details":
-            assistant_message, history = process_family_details(
-                parameters, tool.id, thread_id, run_id
-            )
-        elif func_name =="get_work_details":
-            assistant_message, history = process_work_details(
+            assistant_message, history = process_full_details(
                 parameters, tool.id, thread_id, run_id
             )
         else:
@@ -263,21 +261,21 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             }
     return assistant_message, history
 
-def get_miniscreening_questions():
-    url = "http://testapi.haqdarshak.com/api/get_miniscreening_questions_api"
+# def get_miniscreening_questions():
+#     url = "http://testapi.haqdarshak.com/api/get_miniscreening_questions_api"
 
-    payload = json.dumps({
-    "state": "Maharashtra",
-    "lang": "en"
-    })
-    headers = {
-    'Content-Type': 'application/json'
-    }
+#     payload = json.dumps({
+#     "state": "Maharashtra",
+#     "lang": "en"
+#     })
+#     headers = {
+#     'Content-Type': 'application/json'
+#     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+#     response = requests.request("POST", url, headers=headers, data=payload)
 
-    print(response.text)
-    return response.json()
+#     print(response.text)
+#     return response.json()
 
 def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     """
