@@ -134,6 +134,7 @@ def process_profile(parameters, tool_id, thread_id, run_id):
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
     id = profile_creation(parameters) # id is int
+    set_redis("PID", id)
     if id != 0:
         person_id = str(id)
         tool_output_array = [
@@ -170,38 +171,79 @@ def process_profile(parameters, tool_id, thread_id, run_id):
         }
         return error, history
 
+# def process_parameters(parameters):
+#     # The JSON string containing the function arguments
+#     '''
+#     parameters = 
+#     {
+#     "Religion(CT0000OU)": "Hinduism(CT0000OT)",
+#     "Caste Category(CT00003I)": "OBC(LT000004)",
+#     "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
+#     "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
+#     "Occupational Status(CT0000PF)": "Working(CT00019G)",
+#     "Nature of Job(CT000015)": "Farmer(CT0000BU)"
+#     }
+#     '''
+
+#     response = client.chat.completions.create(
+#                         model="gpt-4",
+#                         response_format={ "type": "json_object" },
+#                         messages=[
+#                             {"role": "system", "content": 
+#                                 '''
+#                                 "You are a helpful assistant designed to convert the provided JSON data into the desired format,you would perform the following steps:
+#                                 Create a New Dictionary: For each key-value pair in the original JSON, create a new dictionary where:
+#                                 The key "concept" corresponds to the concept code extracted from the original key.
+#                                 The key "value" corresponds to the value code extracted from the original value.
+#                                 eg if input is {"Religion(CT0000OU)": "Hinduism(CT0000OT)","Caste Category(CT00003I)": "OBC(LT000004)"}, then output will be 
+#                                 {"concept": "CT0000OU", "value": "CT0000OT"},{"concept": "CT00003I", "value": "LT000004"}
+#                                 '''},
+#                             {"role": "user", "content": parameters}
+#                             ]
+#                         )
+#     print(response.choices[0].message.content)
+
+#     # Extracting the concept codes and their values
+#     output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
+
+#     if isinstance(output, list):
+#         # Print the output list of dictionaries
+#         print(json.dumps(output, indent=2))
+#         return output
+#     else:
+#         return False
+
 def process_parameters(parameters):
-    # The JSON string containing the function arguments
-    '''
-    parameters = 
-    {
-    "Religion(CT0000OU)": "Hinduism(CT0000OT)",
-    "Caste Category(CT00003I)": "OBC(LT000004)",
-    "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
-    "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
-    "Occupational Status(CT0000PF)": "Working(CT00019G)",
-    "Nature of Job(CT000015)": "Farmer(CT0000BU)"
-    }
-    '''
-
     # Parse the JSON string into a dictionary
-    params = json.loads(parameters)
+    # params = json.loads(parameters)
+    print(parameters)
 
-    # Extracting the concept codes and their values
-    output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
-
+    output = extract_codes(parameters)
+    print(output)
     if isinstance(output, list):
         # Print the output list of dictionaries
         print(json.dumps(output, indent=2))
         return output
     else:
         return False
-    
+
+def extract_codes(data):
+    output = []
+    for key, value in data.items():
+        concept = key.split('(')[1].split(')')[0]  # Extract concept code from key
+        if isinstance(value, str) and '(' in value and ')' in value:
+            value_code = value.split('(')[1].split(')')[0]  # Extract value code from value if it is string and contains parentheses
+        else:
+            value_code = value  # Use value as is if it doesn't contain parentheses or is not a string
+        output.append({"concept": concept, "value": value_code})
+    return output
+
 def process_full_details(parameters, tool_id, thread_id, run_id):
     """
     save the responses of full details
     """
-    PID = get_redis_value(PID) # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
+    PID = 0
+    PID = get_redis_value("PID") # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
     print(PID)
     details = process_parameters(parameters)
     print(details)

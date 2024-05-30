@@ -77,7 +77,6 @@ def profile_creation(parameters: dict) -> int:
         if answer.get("code") == 200 and answer.get("message") == "Success":
             print("Done!")
             PID = answer.get("data")["personId"]
-            set_redis(PID, PID)
             return PID # returns the person id of profile just created
     except Exception as e:
         print(e)
