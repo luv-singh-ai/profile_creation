@@ -214,12 +214,10 @@ def process_profile(parameters, tool_id, thread_id, run_id):
 #         return False
 
 def process_parameters(parameters):
-    # Parse the JSON string into a dictionary
-    # params = json.loads(parameters)
-    print(parameters)
-
+    # print(parameters)
     output = extract_codes(parameters)
     print(output)
+    
     if isinstance(output, list):
         # Print the output list of dictionaries
         print(json.dumps(output, indent=2))
@@ -228,15 +226,37 @@ def process_parameters(parameters):
         return False
 
 def extract_codes(data):
-    output = []
-    for key, value in data.items():
-        concept = key.split('(')[1].split(')')[0]  # Extract concept code from key
-        if isinstance(value, str) and '(' in value and ')' in value:
-            value_code = value.split('(')[1].split(')')[0]  # Extract value code from value if it is string and contains parentheses
-        else:
-            value_code = value  # Use value as is if it doesn't contain parentheses or is not a string
-        output.append({"concept": concept, "value": value_code})
+    """ Extract concept and value codes from a dictionary with improved efficiency and readability """
+    output = [{
+        "concept": decode_if_bytes(parse_code(key)),
+        "value": decode_if_bytes(parse_code(value)) if isinstance(value, str) else value
+    } for key, value in data.items()]
     return output
+
+def parse_code(text):
+    """ Utility function to parse codes from text contained within parentheses """
+    if '(' in text and ')' in text:
+        return text.split('(')[1].split(')')[0]
+    return text
+
+def decode_if_bytes(item):
+    """ Utility function to decode bytes to string if needed """
+    return item.decode('utf-8') if isinstance(item, bytes) else item
+
+# def extract_codes(data):
+#     output = []
+#     for key, value in data.items():
+#         concept = key.split('(')[1].split(')')[0]  # Extract concept code from key
+#         if isinstance(value, str) and '(' in value and ')' in value:
+#             value_code = value.split('(')[1].split(')')[0]  # Extract value code from value if it is string and contains parentheses
+#         else:
+#             value_code = value  # Use value as is if it doesn't contain parentheses or is not a string
+#         if isinstance(value_code, bytes):
+#             value_code = value_code.decode('utf-8')
+#         if isinstance(concept, bytes):
+#             concept = concept.decode('utf-8')
+#         output.append({"concept": concept, "value": value_code})
+#     return output
 
 def process_full_details(parameters, tool_id, thread_id, run_id):
     """
@@ -249,15 +269,15 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
     print(details)
     try:
         ans = mini_screening(PID, details)
+        print(ans)
     except Exception as e:
         print(e)
 
-    if ans: # if ans is True
-        print(ans)
+    if ans == "Success": # if ans is True
         tool_output_array = [
             {
                 "tool_call_id": tool_id,
-                "output": True
+                "output": "Success"
             }
         ]
         run = client.beta.threads.runs.submit_tool_outputs(
