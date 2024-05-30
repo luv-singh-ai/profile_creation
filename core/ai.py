@@ -202,8 +202,13 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
     save the responses of full details
     """
     PID = get_redis_value(PID) # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
+    print(PID)
     details = process_parameters(parameters)
-    ans = mini_screening(PID, details)
+    print(details)
+    try:
+        ans = mini_screening(PID, details)
+    except Exception as e:
+        print(e)
 
     if ans: # if ans is True
         print(ans)
@@ -224,7 +229,7 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
             assistant_message = get_assistant_message(client, thread_id)
         else:
             assistant_message = "something went wrong please check the openAI API"
-        print(f"assistant message is {assistant_message}")
+        # print(f"assistant message is {assistant_message}")
 
         history = {
             "thread_id": thread_id,
@@ -234,6 +239,7 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
         return assistant_message, history
     else:
         error = "Profile creation failed. Please try again later."
+        print(error)
         history = {
             "thread_id": thread_id,
             "run_id": run_id,
@@ -268,15 +274,13 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             }
     return assistant_message, history
 
-def compose_function_call_params(func_name, arguments):
+def compose_function_call_params(func_name, arguments): # this function can be removed
     """
     Compose function call parameters based on the args
     provided by openAI function calling API
     """
     print(f"function name is {func_name}")
     parameters = json.loads(arguments)
-    # parameters["auth_token"] = auth_token
-    # parameters["username"] = username
     return parameters
 
 
@@ -316,8 +320,8 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
                 run_id=run_id
         )
         status = None
-    if status == "completed" or status == None:
-        assistant_message, history = gather_user_details(
+    if status == "completed" or status == None: # s1
+        assistant_message, history = gather_user_details( 
             input_message, history, assistant_id
         )      
         thread_id, run_id, status = set_metadata(chat_id, history)
@@ -327,10 +331,10 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
             "status": status,
         }
     if status == "requires_action":
-        tools_to_call, run_id, status = get_tools_to_call(
+        tools_to_call, run_id, status = get_tools_to_call( # s2
             client, thread_id, run_id
         )
-        assistant_message, history = process_function_calls(
+        assistant_message, history = process_function_calls( #s3
             tools_to_call, thread_id, run_id
         )
         thread_id, run_id, status = set_metadata(chat_id, history)
