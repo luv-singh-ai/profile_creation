@@ -30,7 +30,8 @@ from utils.bhashini_utils import (
 )
 
 from utils.profile import (
-    profile_creation
+    profile_creation,
+    mini_screening
 )
 
 import os
@@ -128,13 +129,14 @@ def gather_user_details(input_message, history, assistant_id):
     return assistant_message, history
 
 
-def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
+def process_profile(parameters, tool_id, thread_id, run_id):
     """
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
     id = profile_creation(parameters) # id is int
+    set_redis("PID", id)
     if id != 0:
-        person_id = id
+        person_id = str(id)
         tool_output_array = [
             {
                 "tool_call_id": tool_id,
@@ -168,31 +170,120 @@ def process_creating_profile_action(parameters, tool_id, thread_id, run_id):
             "status": "failed",
         }
         return error, history
-    
-def process_search_complaint_action(parameters, tool_id, thread_id, run_id):
-    """
-    
-    Run the search_complaint function and get the application_status when 
-    the action required is search_complaint
 
+# def process_parameters(parameters):
+#     # The JSON string containing the function arguments
+#     '''
+#     parameters = 
+#     {
+#     "Religion(CT0000OU)": "Hinduism(CT0000OT)",
+#     "Caste Category(CT00003I)": "OBC(LT000004)",
+#     "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
+#     "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
+#     "Occupational Status(CT0000PF)": "Working(CT00019G)",
+#     "Nature of Job(CT000015)": "Farmer(CT0000BU)"
+#     }
+#     '''
+
+#     response = client.chat.completions.create(
+#                         model="gpt-4",
+#                         response_format={ "type": "json_object" },
+#                         messages=[
+#                             {"role": "system", "content": 
+#                                 '''
+#                                 "You are a helpful assistant designed to convert the provided JSON data into the desired format,you would perform the following steps:
+#                                 Create a New Dictionary: For each key-value pair in the original JSON, create a new dictionary where:
+#                                 The key "concept" corresponds to the concept code extracted from the original key.
+#                                 The key "value" corresponds to the value code extracted from the original value.
+#                                 eg if input is {"Religion(CT0000OU)": "Hinduism(CT0000OT)","Caste Category(CT00003I)": "OBC(LT000004)"}, then output will be 
+#                                 {"concept": "CT0000OU", "value": "CT0000OT"},{"concept": "CT00003I", "value": "LT000004"}
+#                                 '''},
+#                             {"role": "user", "content": parameters}
+#                             ]
+#                         )
+#     print(response.choices[0].message.content)
+
+#     # Extracting the concept codes and their values
+#     output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
+
+#     if isinstance(output, list):
+#         # Print the output list of dictionaries
+#         print(json.dumps(output, indent=2))
+#         return output
+#     else:
+#         return False
+
+def process_parameters(parameters):
+    # print(parameters)
+    output = extract_codes(parameters)
+    print(output)
+    
+    if isinstance(output, list):
+        # Print the output list of dictionaries
+        print(json.dumps(output, indent=2))
+        return output
+    else:
+        return False
+
+def extract_codes(data):
+    """ Extract concept and value codes from a dictionary with improved efficiency and readability """
+    output = [{
+        "concept": decode_if_bytes(parse_code(key)),
+        "value": decode_if_bytes(parse_code(value)) if isinstance(value, str) else value
+    } for key, value in data.items()]
+    return output
+
+def parse_code(text):
+    """ Utility function to parse codes from text contained within parentheses """
+    if '(' in text and ')' in text:
+        return text.split('(')[1].split(')')[0]
+    return text
+
+def decode_if_bytes(item):
+    """ Utility function to decode bytes to string if needed """
+    return item.decode('utf-8') if isinstance(item, bytes) else item
+
+# def extract_codes(data):
+#     output = []
+#     for key, value in data.items():
+#         concept = key.split('(')[1].split(')')[0]  # Extract concept code from key
+#         if isinstance(value, str) and '(' in value and ')' in value:
+#             value_code = value.split('(')[1].split(')')[0]  # Extract value code from value if it is string and contains parentheses
+#         else:
+#             value_code = value  # Use value as is if it doesn't contain parentheses or is not a string
+#         if isinstance(value_code, bytes):
+#             value_code = value_code.decode('utf-8')
+#         if isinstance(concept, bytes):
+#             concept = concept.decode('utf-8')
+#         output.append({"concept": concept, "value": value_code})
+#     return output
+
+def process_full_details(parameters, tool_id, thread_id, run_id):
     """
-    complaint = search_complaint(parameters)
-    if complaint:
-        application_status = complaint.get(
-            "ServiceWrappers", []
-        )[0].get(
-            "service", {}
-        ).get("applicationStatus")
+    save the responses of full details
+    """
+    PID = 0
+    PID = get_redis_value("PID") # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
+    print(PID)
+    details = process_parameters(parameters)
+    print(details)
+    try:
+        ans = mini_screening(PID, details)
+        print(ans)
+    except Exception as e:
+        print(e)
+
+    if ans == "Success": # if ans is True
         tool_output_array = [
             {
                 "tool_call_id": tool_id,
-                "output": application_status
+                "output": "Success"
             }
         ]
         run = client.beta.threads.runs.submit_tool_outputs(
-            thread_id=thread_id,
-            run_id=run_id,
-            tool_outputs=tool_output_array
+                thread_id=thread_id,
+                run_id=run_id,
+                tool_outputs=tool_output_array
         )
         run_id, status = get_run_status(client, thread_id, run.id)
 
@@ -200,8 +291,7 @@ def process_search_complaint_action(parameters, tool_id, thread_id, run_id):
             assistant_message = get_assistant_message(client, thread_id)
         else:
             assistant_message = "something went wrong please check the openAI API"
-
-        print(f"assistant message is {assistant_message}")
+        # print(f"assistant message is {assistant_message}")
 
         history = {
             "thread_id": thread_id,
@@ -210,25 +300,14 @@ def process_search_complaint_action(parameters, tool_id, thread_id, run_id):
         }
         return assistant_message, history
     else:
-        return "Complaint not found", history
-
-def compose_function_call_params(func_name, arguments):
-    """
-    Compose function call parameters based on the args
-    provided by openAI function calling API
-    """
-    # auth_token = get_auth_token(
-    #         {
-    #             "username": USERNAME,
-    #             "password": PASSWORD
-    #         }
-    # )
-    print(f"function name is {func_name}")
-    parameters = json.loads(arguments)
-    # parameters["auth_token"] = auth_token
-    # parameters["username"] = username
-    return parameters
-
+        error = "Profile creation failed. Please try again later."
+        print(error)
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": "failed",
+        }
+        return error, history
 
 def process_function_calls(tools_to_call, thread_id, run_id):
     """
@@ -241,13 +320,13 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             func_name, tool.function.arguments
         )
         if func_name == "get_user_details":
-            assistant_message, history = process_creating_profile_action(
+            assistant_message, history = process_profile(
                 parameters, tool.id, thread_id, run_id
             )
-        # elif func_name == "search_complaint":
-        #     assistant_message, history = process_search_complaint_action(
-        #         parameters, tool.id, thread_id, run_id
-        #     )
+        elif func_name == "get_full_details":
+            assistant_message, history = process_full_details(
+                parameters, tool.id, thread_id, run_id
+            )
         else:
             assistant_message = "This functionality is not supported yet. Please try again later."
             history = {
@@ -256,6 +335,32 @@ def process_function_calls(tools_to_call, thread_id, run_id):
                 "status": "requires_action",
             }
     return assistant_message, history
+
+def compose_function_call_params(func_name, arguments): # this function can be removed
+    """
+    Compose function call parameters based on the args
+    provided by openAI function calling API
+    """
+    print(f"function name is {func_name}")
+    parameters = json.loads(arguments)
+    return parameters
+
+
+# def get_miniscreening_questions():
+#     url = "http://testapi.haqdarshak.com/api/get_miniscreening_questions_api"
+
+#     payload = json.dumps({
+#     "state": "Maharashtra",
+#     "lang": "en"
+#     })
+#     headers = {
+#     'Content-Type': 'application/json'
+#     }
+
+#     response = requests.request("POST", url, headers=headers, data=payload)
+
+#     print(response.text)
+#     return response.json()
 
 def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     """
@@ -277,8 +382,8 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
                 run_id=run_id
         )
         status = None
-    if status == "completed" or status == None:
-        assistant_message, history = gather_user_details(
+    if status == "completed" or status == None: # s1
+        assistant_message, history = gather_user_details( 
             input_message, history, assistant_id
         )      
         thread_id, run_id, status = set_metadata(chat_id, history)
@@ -288,20 +393,13 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
             "status": status,
         }
     if status == "requires_action":
-        try:
-            tools_to_call, run_id, status = get_tools_to_call(
-                client, thread_id, run_id
-            )
-            assistant_message, history = process_function_calls(
-                tools_to_call, thread_id, run_id
-            )
-            thread_id, run_id, status = set_metadata(chat_id, history)
-        except:
-            assistant_message = "there is an error"
-            # per = {"firstName": "Mukesh", "lastName": "Sharma", "mobile": "9897969594", "gender": "M", "maritalStatus": "Married", "dob": "1992-04-11"}
-            # per_id = profile_creation(per)
-            # assistant_message, history = f"person id created is {per_id}" , history # json.dumps(per)
-            # thread_id, run_id, status = set_metadata(chat_id, history)
+        tools_to_call, run_id, status = get_tools_to_call( # s2
+            client, thread_id, run_id
+        )
+        assistant_message, history = process_function_calls( #s3
+            tools_to_call, thread_id, run_id
+        )
+        thread_id, run_id, status = set_metadata(chat_id, history)
 
     return assistant_message, history
 
@@ -401,3 +499,4 @@ def process_image(chat_id, image_data):
     print(f"text from inside the func is {text}")
 
     return text
+
