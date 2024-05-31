@@ -4,6 +4,11 @@ import json
 from datetime import date
 from pydantic import BaseModel, Field, validator
 from typing import Literal
+
+from utils.redis_utils import (
+    get_redis_value,
+    set_redis,
+)
 # Define a Pydantic model for user data
 class User(BaseModel):
     firstName: str = Field(..., min_length=1)
@@ -33,46 +38,103 @@ def profile_creation(parameters: dict) -> int:
     parameters.update(location_details)
     print(parameters)
     
-    payload = json.dumps(parameters)
-    # payload = json.dumps({
-    #     "firstName": "Shriram",
-    #     "lastName": "Kanawade",
-    #     "mobile": "7020922248",
-    #     "gender": "M",
-    #     "maritalStatus": "Married",
-    #     "dob": "1992-04-11",
-    #     "state": 27,
-    #     "district": 468,
-    #     "livingType": "urban",
-    #     "ulb": 251323,
-    #     "ward": 65537,
-    #     "pincode": "422603"
-    # })
+    try:
+        payload = json.dumps(parameters)
+    except Exception as e:
+        print(e)
+        # payload = json.dumps({
+        #     "firstName": "Shriram",
+        #     "lastName": "Kanawade",
+        #     "mobile": "7020922248",
+        #     "gender": "M",
+        #     "maritalStatus": "Married",
+        #     "dob": "1992-04-11",
+        #     "state": 27,
+        #     "district": 468,
+        #     "livingType": "urban",
+        #     "ulb": 251323,
+        #     "ward": 65537,
+        #     "pincode": "422603"
+        # })
+    # crating new auth token 
+    token = generate_token()
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjE5LCJzdGF0ZSI6Ik1haGFyYXNodHJhIiwidXNlcl9pZCI6Mjg5NjAsImlkIjoyODk2MCwiZXhwIjoxNzE3ODI2MTA3fQ.ehYpfdxyT4l8w4Sv8nUpUD5ula_yl-qM_oOo-emUemY'
+        'Authorization': f'Bearer {token}'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
 
     print(response.text) # it's in string format - {"code": 200, "message": "Success", "data": {"personId": 505099}}
     # type(response) is <class 'requests.models.Response'>
-    answer = json.loads(response.text)
+    try:
+        answer = json.loads(response.text)
+    except Exception as e:
+        print(e)
+        print(response.status_code)
+        return 0 # 0 for false profile creation
     try:
         if answer.get("code") == 200 and answer.get("message") == "Success":
             print("Done!")
-            return answer.get("data")["personId"] # returns the person id of profile just created
+            PID = answer.get("data")["personId"]
+            return PID # returns the person id of profile just created
     except Exception as e:
         print(e)
         print(response.status_code)
         return 0 # 0 for false profile creation
 
+def generate_token() -> int:
+
+    url = "https://testapi.haqdarshak.com/api/generate_token"
+
+    payload = json.dumps({
+    "api_key": "346ca1a3fb416f084b8e737970f57751",
+    "secret_key": "358567b4d67e639bbb02bb02e6df58605eed447a",
+    "state_code": "MH",
+    "agent_id": "451"
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    token_res = json.loads(response.text)
+    token = token_res.get("token")
+    return token
+
+def mini_screening(PID, details):
+    url = "https://testapi.haqdarshak.com/api/save_mini_scr_question"
+    # PID = get_redis_value(PID)
+    print(type(PID))
+    print(type(details))
+    # json_payload = json.dumps(details)
+    payload = json.dumps({
+    "personId": int(PID),
+    "answers": details
+    })
+    token = generate_token()
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}'
+    }
+    try:
+        response = requests.request("POST", url, headers=headers, data=payload)
+        print(response.text)
+        return "Success"
+    except Exception as e:
+        print(e)
+        print(response.status_code)
+        return 0 # 0 for false profile creation
+
+
+
 # if __name__ == '__main__':
 #     message = ""
 #     message = profile_creation({}, "")
 #     print(message)
-    
-def get_location_details(data):
+
+def get_location_details(data, lang, state_code = 27, district_code = 468 , sub_district_code = 45, village_code = 10, ulb_code = 251323, ward_code = 65537, pincode = 422603):
+    # sub_district_code = 45, village_code = 10 are random values
     # url = "https://testapi.haqdarshak.com/api/get_location_details"
     # payload = json.dumps(data)
   
@@ -85,7 +147,6 @@ def get_location_details(data):
         }
     response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_states&lang='+lang, headers=headers)
     states = response.json()['data']
-    
     
     headers = {
         'Authorization': 'Bearer ' + token,
@@ -111,12 +172,12 @@ def get_location_details(data):
     response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_sub_districts_by_district&district_code='+district_code+'&lang='+lang, headers=headers)
     subDistricts = response.json()['data']
     
-    headers = {
-        'Authorization': 'Bearer ' + token,
-        'content-type': 'application/json',
-        'User-Agent': '*/*'
-        }
-    response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_villages_by_block_sub_district&sub_district_code='+sub_district_code+'&block_code='+block_code+'&lang='+lang, headers=headers)
+    # headers = {
+    #     'Authorization': 'Bearer ' + token,
+    #     'content-type': 'application/json',
+    #     'User-Agent': '*/*'
+    #     }
+    # response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_villages_by_block_sub_district&sub_district_code='+sub_district_code+'&block_code='+block_code+'&lang='+lang, headers=headers)
     villages = response.json()['data']
     
     headers = {
