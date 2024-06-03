@@ -145,7 +145,7 @@ def get_location_details(data, lang, state_code = 27, district_code = 468 , sub_
         'content-type': 'application/json',
         'User-Agent': '*/*'
         }
-    response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_states&lang='+lang, headers=headers)
+    response = requests.get('https://testapi.haqdarshak.com/elastic/lgd?req_type=get_states&lang='+lang, headers=headers) # english - 'en' and Hindi - 'Hi', marathi - 'mr'
     states = response.json()['data']
     
     headers = {
