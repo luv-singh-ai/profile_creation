@@ -6,6 +6,6 @@ python-telegram-bot
 PyYAML
 pydub
 ffmpeg
-opencv
+opencv-python
 pytesseract
 
