@@ -1,7 +1,7 @@
 from openai import OpenAI
 import numpy as np
-import cv2
-import pytesseract
+# import cv2
+# import pytesseract
 # from utils.digit_utils import (
 #     get_auth_token, 
 #     file_complaint, 
@@ -432,71 +432,71 @@ def bhashini_audio_chat(chat_id, audio_file, lang):
     return audio_content, response, history
 
 
-def parse_photo_text(photo_text):
-    """
-    Method to parse text from a photo
-    """
-    prompt = '''
-    You are a helpful assistant that reads extracted text data from an image. the image data is read using opencv and pytesseract, so they are slightly jumbled together. 
-    Your task is to read the given text and identitfy entites like first name, last name, mobile number, gender, marital status, and date of birth (dob). If some details are not possible, ask the user to input it as text.  
-    Whatever entites you're able to identify, try to organize this information into a structured JSON string with the following format:
-    {
-    "firstName": <value>,
-    "lastName": <value>,
-    "mobile": <value>,
-    "gender": <value>,
-    "maritalStatus": <value>,
-    "dob": <value>,
-    }
-    '''
-    response = ""
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt.replace('\n', ' ')},
-            {"role": "user", "content": photo_text}
-        ]
-    )
+# def parse_photo_text(photo_text):
+#     """
+#     Method to parse text from a photo
+#     """
+#     prompt = '''
+#     You are a helpful assistant that reads extracted text data from an image. the image data is read using opencv and pytesseract, so they are slightly jumbled together. 
+#     Your task is to read the given text and identitfy entites like first name, last name, mobile number, gender, marital status, and date of birth (dob). If some details are not possible, ask the user to input it as text.  
+#     Whatever entites you're able to identify, try to organize this information into a structured JSON string with the following format:
+#     {
+#     "firstName": <value>,
+#     "lastName": <value>,
+#     "mobile": <value>,
+#     "gender": <value>,
+#     "maritalStatus": <value>,
+#     "dob": <value>,
+#     }
+#     '''
+#     response = ""
+#     completion = client.chat.completions.create(
+#         model="gpt-3.5-turbo",
+#         messages=[
+#             {"role": "system", "content": prompt.replace('\n', ' ')},
+#             {"role": "user", "content": photo_text}
+#         ]
+#     )
 
-    try:
-        print(f"completion is {completion}\n\n")
-        # print("completion is", completion, "\n\n")
-        response = completion.choices[0].message.content
-        print(f"response_text is {response}")
-        print(type(response))
-        #response = json.loads(response)
-    except Exception as e:
-        print(e)
-        response = "Cannot read image. Input all details as text"
-    return response
+#     try:
+#         print(f"completion is {completion}\n\n")
+#         # print("completion is", completion, "\n\n")
+#         response = completion.choices[0].message.content
+#         print(f"response_text is {response}")
+#         print(type(response))
+#         #response = json.loads(response)
+#     except Exception as e:
+#         print(e)
+#         response = "Cannot read image. Input all details as text"
+#     return response
 
-def process_image(chat_id, image_data):
-    """
-    Process the uploaded image and extract text using OCR.
+# def process_image(chat_id, image_data):
+#     """
+#     Process the uploaded image and extract text using OCR.
 
-    Parameters:
-    - chat_id (int): The ID of the chat.
-    - image_data (str): Binary data of the uploaded image.
+#     Parameters:
+#     - chat_id (int): The ID of the chat.
+#     - image_data (str): Binary data of the uploaded image.
 
-    Returns:
-    - text (str): The extracted text from the image.
-    """
-    # Process the uploaded image as needed
-    # Decode the image from binary data
-    image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+#     Returns:
+#     - text (str): The extracted text from the image.
+#     """
+#     # Process the uploaded image as needed
+#     # Decode the image from binary data
+#     image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
 
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#     # Convert the image to grayscale
+#     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Apply thresholding to preprocess the image
-    threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+#     # Apply thresholding to preprocess the image
+#     threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    # Set the path to the Tesseract executable
-    pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
+#     # Set the path to the Tesseract executable
+#     pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
 
-    # Perform text extraction using pytesseract
-    text = pytesseract.image_to_string(threshold)
-    print(f"text from inside the func is {text}")
+#     # Perform text extraction using pytesseract
+#     text = pytesseract.image_to_string(threshold)
+#     print(f"text from inside the func is {text}")
 
-    return text
+#     return text
 
