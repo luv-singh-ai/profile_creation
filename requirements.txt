@@ -7,3 +7,4 @@ PyYAML
 pydub
 ffmpeg
 opencv-python
+pytesseract
