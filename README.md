@@ -1,8 +1,3 @@
-# Mr Nags
-
-Mr Nags is a complaint filing chatbot using egov digit platform.
-
-
 ## Installation
 
 1. Create a file `.env` inside `ops` directory and add the following lines to it:
@@ -10,8 +5,6 @@ Mr Nags is a complaint filing chatbot using egov digit platform.
     OPENAI_API_KEY=<OPENAI_API_KEY>
     TELEGRAM_BOT_TOKEN=<TELEGRAM BOT TOKEN>
     REDIS_HOST=redis (localhost if running locally without docker)
-    USERNAME=<digit-username>
-    PASSWORD=<digit-password>
     MODEL_NAME=<model-name eg: gpt-3.5-turbo>
     BHASHINI_KEY=<bhashini-key>
     ```
@@ -39,9 +32,6 @@ Mr Nags is a complaint filing chatbot using egov digit platform.
 
 1. To start a conversation with the bot, start having a conversation by saying hey, hello or I have a complaint
 2. Start by typing '/start' and then select your language from the dropdown menu.
-3. The bot will ask you to describe your complaint
-4. Once you have described your complaint, the bot will file the complaint and give you your complaint number.
-5. Todo: Map Location details from chat to the proper parameters in digit API call(s). 
 
 
 
