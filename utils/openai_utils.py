@@ -165,6 +165,36 @@ get_full_details = {
     }
 }
 
+get_OTP = {
+    "name": "get_OTP",
+    "description": "Read the user's mobile number, usually 10 digit, and send the OTP",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "num":{
+                "type":"string",
+                "description": "Mobile number of user"
+            }
+        },
+        "required": ["num"]
+    }
+}
+
+verify_OTP = {
+    "name": "verify_OTP",
+    "description": "Verify the six digit OTP sent to user's mobile number",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "OTP":{
+                "type":"string",
+                "description": "six digit OTP sent to user's mobile number"
+            }
+        },
+        "required": ["OTP"]
+    }
+}
+
 def create_assistant(client, assistant_id):
     try:
         assistant = client.beta.assistants.retrieve(assistant_id=assistant_id)
@@ -183,6 +213,14 @@ def create_assistant(client, assistant_id):
                 {
                     "type": "function",
                     "function": get_full_details # function_call = {'name': 'get_full_details'},
+                },
+                {
+                    "type":"function",
+                    "function": get_OTP # function_call = {'name': 'get_OTP'},
+                },
+                {
+                    "type":"function",
+                    "function": verify_OTP # function_call = {'name': 'verify_OTP'},
                 }
                 # {
                 #     "type": "retrieval",
@@ -243,12 +281,11 @@ def get_tools_to_call(client, thread_id, run_id):
         thread_id=thread_id
     )
     tools_to_call = run.required_action.submit_tool_outputs.tool_calls
+    print()
     print(f"tools to call are {tools_to_call}")
     print()
     print(f"run id is {run_id}")
-    print()
     print(f"thread id is {thread_id}")
-    print()
     if tools_to_call is None:
         print("No tools to call")
     return tools_to_call, run.id, run.status

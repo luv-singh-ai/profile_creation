@@ -1,12 +1,13 @@
+#  chat function in line no 400
+
 from openai import OpenAI
 import numpy as np
 import cv2
 import pytesseract
-# from utils.digit_utils import (
-#     get_auth_token, 
-#     file_complaint, 
-#     search_complaint
-# )
+from utils.profile import (
+    generate_otp, 
+    verify_otp
+    )
 from utils.openai_utils import (
     create_run,
     create_thread,
@@ -92,8 +93,10 @@ def get_or_create_thread_id(client, thread_id):
     Get thread_id if exists else create a new thread
     using openAI assistant API
     """
+    # Replace retriving thread as concurrent requests are gettign merged into a single thread
+    
     if thread_id:
-        thread = client.beta.threads.retrieve(thread_id)
+        thread = client.beta.threads.retrieve(thread_id) # Create a new thread instead
         thread_id = thread.id
     else:
         thread = create_thread(client)
@@ -106,9 +109,11 @@ def gather_user_details(input_message, history, assistant_id):
     openAI assistant API
     """
     thread_id = history.get("thread_id")
+    print("Thread ID is", thread_id)
     status = history.get("status")
     print(thread_id, input_message, assistant_id)
     run_id, status = upload_message(client, thread_id, input_message, assistant_id)
+    # ValueError: Expected a non-empty value for `thread_id` but received None
     print("run.status is", status)
     run_id, status = get_run_status(client, thread_id, run_id)
     print(f"input message is {input_message}")
@@ -171,50 +176,8 @@ def process_profile(parameters, tool_id, thread_id, run_id):
         }
         return error, history
 
-# def process_parameters(parameters):
-#     # The JSON string containing the function arguments
-#     '''
-#     parameters = 
-#     {
-#     "Religion(CT0000OU)": "Hinduism(CT0000OT)",
-#     "Caste Category(CT00003I)": "OBC(LT000004)",
-#     "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
-#     "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
-#     "Occupational Status(CT0000PF)": "Working(CT00019G)",
-#     "Nature of Job(CT000015)": "Farmer(CT0000BU)"
-#     }
-#     '''
-
-#     response = client.chat.completions.create(
-#                         model="gpt-4",
-#                         response_format={ "type": "json_object" },
-#                         messages=[
-#                             {"role": "system", "content": 
-#                                 '''
-#                                 "You are a helpful assistant designed to convert the provided JSON data into the desired format,you would perform the following steps:
-#                                 Create a New Dictionary: For each key-value pair in the original JSON, create a new dictionary where:
-#                                 The key "concept" corresponds to the concept code extracted from the original key.
-#                                 The key "value" corresponds to the value code extracted from the original value.
-#                                 eg if input is {"Religion(CT0000OU)": "Hinduism(CT0000OT)","Caste Category(CT00003I)": "OBC(LT000004)"}, then output will be 
-#                                 {"concept": "CT0000OU", "value": "CT0000OT"},{"concept": "CT00003I", "value": "LT000004"}
-#                                 '''},
-#                             {"role": "user", "content": parameters}
-#                             ]
-#                         )
-#     print(response.choices[0].message.content)
-
-#     # Extracting the concept codes and their values
-#     output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
-
-#     if isinstance(output, list):
-#         # Print the output list of dictionaries
-#         print(json.dumps(output, indent=2))
-#         return output
-#     else:
-#         return False
-
 def process_parameters(parameters):
-    # print(parameters)
+    print(parameters)
     output = extract_codes(parameters)
     print(output)
     
@@ -229,7 +192,7 @@ def extract_codes(data):
     """ Extract concept and value codes from a dictionary with improved efficiency and readability """
     output = [{
         "concept": decode_if_bytes(parse_code(key)),
-        "value": decode_if_bytes(parse_code(value)) if isinstance(value, str) else value
+        "value": decode_if_bytes(parse_code(value)) if isinstance(value, str) else value # last ifinstance is for monthly income as its value is an integer , not string
     } for key, value in data.items()]
     return output
 
@@ -262,9 +225,12 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
     """
     save the responses of full details
     """
-    PID = 0
-    PID = get_redis_value("PID") # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
-    print(PID)
+    try:
+        PID = get_redis_value("PID") # IF PID FAILS, RESORT TO DEFAULT OR ANOTHER METHOD
+        print(PID)
+    except:
+        PID = 0
+        print("ERROR: PID not found in redis. Setting it to 0")
     details = process_parameters(parameters)
     print(details)
     try:
@@ -290,7 +256,7 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
         if status == "completed":
             assistant_message = get_assistant_message(client, thread_id)
         else:
-            assistant_message = "something went wrong please check the openAI API"
+            assistant_message = "couldn't get the assistant message. Please try again later."
         # print(f"assistant message is {assistant_message}")
 
         history = {
@@ -300,7 +266,95 @@ def process_full_details(parameters, tool_id, thread_id, run_id):
         }
         return assistant_message, history
     else:
-        error = "Profile creation failed. Please try again later."
+        error = "Failed to get family and work details. Please try again later."
+        print(error)
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": "failed",
+        }
+        return error, history
+
+def process_OTP(parameters, tool_id, thread_id, run_id):
+    """
+    Sends the OTP 
+    """
+    number = parameters.get("num") 
+    # check number is string or integer if error
+    print("number is", number)
+        
+    if generate_otp(number):
+        tool_output_array = [
+            {
+                "tool_call_id": tool_id,
+                "output": number # True
+            }
+        ]
+        run = client.beta.threads.runs.submit_tool_outputs(
+                thread_id=thread_id,
+                run_id=run_id,
+                tool_outputs=tool_output_array
+        )
+        run_id, status = get_run_status(client, thread_id, run.id)
+
+        if status == "completed":
+            assistant_message = get_assistant_message(client, thread_id)
+        else:
+            assistant_message = "couldn't get the assistant message. Please try again later."
+        # print(f"assistant message is {assistant_message}")
+
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": status,
+        }
+        return assistant_message, history
+    else:
+        error = "Failed to gererate OTP for this Number. Please try again later."
+        print(error)
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": "failed",
+        }
+        return error, history
+    
+def process_vOTP(parameters, tool_id, thread_id, run_id):
+    """
+    Verify the OTP 
+    """
+    otp = parameters.get("OTP") 
+    print("Submitted OTP is", otp)
+    print("type of parameters is: ", type(parameters))
+
+    if verify_otp(otp):
+        tool_output_array = [
+            {
+                "tool_call_id": tool_id,
+                "output": "success" # -> indicates that the OTP was successfully verified.
+            }
+        ]
+        run = client.beta.threads.runs.submit_tool_outputs(
+                thread_id=thread_id,
+                run_id=run_id,
+                tool_outputs=tool_output_array
+        )
+        run_id, status = get_run_status(client, thread_id, run.id)
+
+        if status == "completed":
+            assistant_message = get_assistant_message(client, thread_id)
+        else:
+            assistant_message = "couldn't get the assistant message. Please try again later."
+        # print(f"assistant message is {assistant_message}")
+
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": status,
+        }
+        return assistant_message, history
+    else:
+        error = "Failed to verify OTP for this Number. Please try again later."
         print(error)
         history = {
             "thread_id": thread_id,
@@ -325,6 +379,14 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             )
         elif func_name == "get_full_details":
             assistant_message, history = process_full_details(
+                parameters, tool.id, thread_id, run_id
+            )
+        elif func_name == "get_OTP":
+            assistant_message, history = process_OTP(
+            parameters, tool.id, thread_id, run_id
+            )
+        elif func_name == "verify_OTP":
+            assistant_message, history = process_vOTP(
                 parameters, tool.id, thread_id, run_id
             )
         else:
@@ -370,12 +432,23 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     assistant_message = "Something went wrong. Please try again later."    
     history = get_metadata(chat_id)
     print(history)
-    thread_id = history.get("thread_id")
+    # thread_id = history.get("thread_id")
+    # run_id = history.get("run_id")
+    # status = history.get("status")
+    # thread_id = get_or_create_thread_id(client, thread_id)
+    # history["thread_id"] = thread_id
+    # print(f"thread id is {thread_id}")
     run_id = history.get("run_id")
     status = history.get("status")
-    thread_id = get_or_create_thread_id(client, thread_id)
-    history["thread_id"] = thread_id
-    print(f"thread id is {thread_id}")
+    try: 
+        thread_id = history.get("thread_id")
+        if thread_id is None:
+            thread_id = get_or_create_thread_id(client, thread_id)
+            history["thread_id"] = thread_id
+            print(f"thread id is {thread_id}")
+    except Exception as e:
+        print(e)
+        
     if status == "failed":
         run = client.beta.threads.runs.cancel(
                 thread_id=thread_id,
@@ -392,6 +465,7 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
             "run_id": run_id,
             "status": status,
         }
+        print("history is \n", history)
     if status == "requires_action":
         tools_to_call, run_id, status = get_tools_to_call( # s2
             client, thread_id, run_id
@@ -500,3 +574,44 @@ def process_image(chat_id, image_data):
 
     return text
 
+# def process_parameters(parameters):
+#     # The JSON string containing the function arguments
+#     '''
+#     parameters = 
+#     {
+#     "Religion(CT0000OU)": "Hinduism(CT0000OT)",
+#     "Caste Category(CT00003I)": "OBC(LT000004)",
+#     "Ration card type(CT00001D)": "Above Poverty Line(CT00002C)",
+#     "Land Ownership(CT0001AJ)": "Yes - for agriculture(CT0001AH)",
+#     "Occupational Status(CT0000PF)": "Working(CT00019G)",
+#     "Nature of Job(CT000015)": "Farmer(CT0000BU)"
+#     }
+#     '''
+
+#     response = client.chat.completions.create(
+#                         model="gpt-4",
+#                         response_format={ "type": "json_object" },
+#                         messages=[
+#                             {"role": "system", "content": 
+#                                 '''
+#                                 "You are a helpful assistant designed to convert the provided JSON data into the desired format,you would perform the following steps:
+#                                 Create a New Dictionary: For each key-value pair in the original JSON, create a new dictionary where:
+#                                 The key "concept" corresponds to the concept code extracted from the original key.
+#                                 The key "value" corresponds to the value code extracted from the original value.
+#                                 eg if input is {"Religion(CT0000OU)": "Hinduism(CT0000OT)","Caste Category(CT00003I)": "OBC(LT000004)"}, then output will be 
+#                                 {"concept": "CT0000OU", "value": "CT0000OT"},{"concept": "CT00003I", "value": "LT000004"}
+#                                 '''},
+#                             {"role": "user", "content": parameters}
+#                             ]
+#                         )
+#     print(response.choices[0].message.content)
+
+#     # Extracting the concept codes and their values
+#     output = [{"concept": key.split('(')[1].split(')')[0], "value": value.split('(')[1].split(')')[0]} for key, value in params.items()]
+
+#     if isinstance(output, list):
+#         # Print the output list of dictionaries
+#         print(json.dumps(output, indent=2))
+#         return output
+#     else:
+#         return False

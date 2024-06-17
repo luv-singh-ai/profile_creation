@@ -30,8 +30,9 @@
 
 ## Usage
 
-1. To start a conversation with the bot, start having a conversation by saying hey, hello or I have a complaint
-2. Start by typing '/start' and then select your language from the dropdown menu.
+1. To start a conversation with the bot, start having a conversation by saying hey or hello
+2. Select your language from the dropdown menu.
+3. Input all details to create your profile
 
 
 
