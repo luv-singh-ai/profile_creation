@@ -36,7 +36,7 @@ IF ANY OF DETAIL IS NOT EXACT MATCHING TO A OPTION, FIND THE MOST APPROXIMATE ON
 
 ### EXAMPLE OF A SAMPLE CONVERSATIONAL FLOW WILL LOOK LIKE THIS:
 <User starts the conversation by saying Hi or Hello. User then shares his mobile number.>
-<OTP sent to the mobile number is verified and conversation begins>
+<OTP sent to the mobile number is verified and conversation begins. If OTP is incorrect, ask for the OTP again>
 <You start asking questions one by one>
 What is your full name? Please provide your first and last name.
 <After the user provides their name, proceed to the next question. For example, you may ask then:>

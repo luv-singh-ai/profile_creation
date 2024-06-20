@@ -51,17 +51,25 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 # USERNAME = os.getenv("USERNAME")
 # PASSWORD = os.getenv("PASSWORD")
 
-assistant_id = get_redis_value("assistant_id")
-
-print(f"assistant id is {assistant_id}")
-
 client = OpenAI(
     api_key=openai_api_key,
 )
 
-assistant = create_assistant(client, assistant_id)
+# when prompt or function will change, create a new assistant. also delete the older ones
+# try:
+#     print(f"Assistant List: {client.beta.assistants.list(limit=100, order='desc')}")
+# except Exception as e:
+#     print(e)
 
-assistant_id = assistant.id
+try:
+    # assistant_id = get_redis_value("assistant_id")
+    assistant_id = os.getenv("ASSISTANT_ID")
+    print(f"assistant id is {assistant_id}")
+    assistant = client.beta.assistants.retrieve(assistant_id=assistant_id)
+except Exception as e:
+    print(e)
+    assistant = create_assistant(client, assistant_id)
+    assistant_id = assistant.id
 
 def get_metadata(chat_id):
     """
@@ -95,11 +103,11 @@ def get_or_create_thread_id(client, thread_id):
     """
     # Replace retriving thread as concurrent requests are gettign merged into a single thread
     
-    if thread_id:
-        thread = client.beta.threads.retrieve(thread_id) # Create a new thread instead
+    try:
+        thread = create_thread(client) # switched blocks here
         thread_id = thread.id
-    else:
-        thread = create_thread(client)
+    except:
+        thread = client.beta.threads.retrieve(thread_id)
         thread_id = thread.id
     return thread_id
 
@@ -158,7 +166,7 @@ def process_profile(parameters, tool_id, thread_id, run_id):
         if status == "completed":
             assistant_message = get_assistant_message(client, thread_id)
         else:
-            assistant_message = "something went wrong please check the openAI API"
+            assistant_message = "process profile not completed"
         print(f"assistant message is {assistant_message}")
 
         history = {
@@ -438,14 +446,14 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     # thread_id = get_or_create_thread_id(client, thread_id)
     # history["thread_id"] = thread_id
     # print(f"thread id is {thread_id}")
-    run_id = history.get("run_id")
-    status = history.get("status")
     try: 
         thread_id = history.get("thread_id")
         if thread_id is None:
             thread_id = get_or_create_thread_id(client, thread_id)
             history["thread_id"] = thread_id
             print(f"thread id is {thread_id}")
+        run_id = history.get("run_id")
+        status = history.get("status")
     except Exception as e:
         print(e)
         

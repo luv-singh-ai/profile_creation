@@ -105,7 +105,13 @@ def verify_otp(text):
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()  # Raise an error for bad status codes
         print(response.text)
-        return True
+        answer = json.loads(response.text)
+        if answer.get("message") == "Success": # {"status": 200, "message": "Success"}
+            return True
+        else:
+            # {"status": 200, "message": "Invalid OTP"}
+            print("Invalid OTP")
+            return False
     except requests.RequestException as e:
         print(f"Error: {e}")
         return False

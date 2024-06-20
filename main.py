@@ -34,7 +34,8 @@ from core.ai import (
 
 from utils.redis_utils import (
     set_redis,
-    get_redis_value
+    get_redis_value,
+    delete_redis
 )
 import pytesseract
 from PIL import Image
@@ -69,6 +70,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         text="Hello I am Yojana Didi , please share your details with me."
         # func to take consent from user to be added later
     )
+    try:
+        context.user_data.clear()
+        keys_to_delete = ['thread_id', 'chat_id', 'PID','assistant_id', 'number']
+        # Delete the specified keys
+        for key in keys_to_delete:
+            delete_redis(key)
+    except:
+        print("some keys could not be found")
     await relay_handler(update, context)
 
 async def relay_handler(update: Update, context: CallbackContext):
@@ -112,7 +121,7 @@ async def preferred_language_callback(update: Update, context: CallbackContext):
     elif lang == "mr":
         text_message = "तुम्ही मराठीची निवड केली आहे. \n कृपया तुमचे तपशील शेअर करा। तुमचा 10 अंकी मोबाईल नंबर काय आहे?"
         
-    set_redis('lang', lang)
+    # set_redis('lang', lang)
     
     await context.bot.send_message(
     chat_id=update.effective_chat.id, 
@@ -286,12 +295,12 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(
         token
     ).read_timeout(30).write_timeout(30).build()
-    # start_handler = CommandHandler('start', start)
+    start_handler = CommandHandler('start', start)
     language_handler_ = CommandHandler('set_language', language_handler)
     chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
     # otp_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler)
     # otpv_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler_1)
-    # application.add_handler(start_handler)
+    application.add_handler(start_handler)
     application.add_handler(language_handler_)
     application.add_handler(chosen_language)
     # application.add_handler(otp_handler)
