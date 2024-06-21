@@ -72,7 +72,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     try:
         context.user_data.clear()
-        keys_to_delete = ['thread_id', 'chat_id', 'PID','assistant_id', 'number']
+        keys_to_delete = ['thread_id', 'chat_id', 'PID','number'] # 'assistant_id'
         # Delete the specified keys
         for key in keys_to_delete:
             delete_redis(key)
