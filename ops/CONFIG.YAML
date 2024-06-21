@@ -12,7 +12,6 @@ languages:
   en: English
   mr: Marathi
 
-# '''
 # Languages supported by Groq
 # languages = {
 #     "English": "English",
@@ -27,4 +26,3 @@ languages:
 #     "ଓଡ଼ିଆ": "Oriya",
 #     "ਪੰਜਾਬੀ": "Punjabi",
 # }
-# '''
