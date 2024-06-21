@@ -362,7 +362,7 @@ def process_vOTP(parameters, tool_id, thread_id, run_id):
         }
         return assistant_message, history
     else:
-        error = "Failed to verify OTP for this Number. Please try again later."
+        error = "Failed to verify OTP for this Number. Please try again later." # Do not proceed further without verifying the OTP
         print(error)
         history = {
             "thread_id": thread_id,
