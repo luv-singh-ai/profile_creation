@@ -111,12 +111,14 @@ def verify_otp(text):
         else:
             # {"status": 200, "message": "Invalid OTP"}
             print("Invalid OTP")
+            set_redis('otp_check', False)
             return False
     except requests.RequestException as e:
         print(f"Error: {e}")
         return False
 
 def profile_creation(parameters: dict) -> int:
+        
     url = "https://testapi.haqdarshak.com/api/create_citizen"
     '''parameters = {"firstName": value, "lastName": value, "mobile": value, "gender": value, 
     "maritalStatus": value, "dob": value, "state": value, "district": value, "livingType": value, 
@@ -125,7 +127,8 @@ def profile_creation(parameters: dict) -> int:
     location_details = {"state": 27, "district": 468, "livingType": "urban", "ulb": 251323, "ward": 65537, "pincode": "422603"}
     parameters.update(location_details)
     print(parameters)
-    
+
+   
     try:
         payload = json.dumps(parameters)
     except Exception as e:

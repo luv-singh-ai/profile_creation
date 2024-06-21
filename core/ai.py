@@ -22,6 +22,7 @@ from utils.openai_utils import (
 from utils.redis_utils import (
     get_redis_value,
     set_redis,
+    delete_redis
 )
 
 from utils.bhashini_utils import (
@@ -146,6 +147,13 @@ def process_profile(parameters, tool_id, thread_id, run_id):
     """
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
+    otp_check = get_redis_value('otp_check')
+    # otp_check = False
+    if otp_check is True:
+        delete_redis('otp_check')
+    else:
+        return 0 # 0 for false profile creation
+    
     id = profile_creation(parameters) # id is int
     set_redis("PID", id)
     if id != 0:
@@ -360,6 +368,7 @@ def process_vOTP(parameters, tool_id, thread_id, run_id):
             "run_id": run_id,
             "status": status,
         }
+        # history['otp_value'] = True
         return assistant_message, history
     else:
         error = "Failed to verify OTP for this Number. Please try again later." # Do not proceed further without verifying the OTP
@@ -369,6 +378,7 @@ def process_vOTP(parameters, tool_id, thread_id, run_id):
             "run_id": run_id,
             "status": "failed",
         }
+        # history['otp_value'] = False
         return error, history
 
 def process_function_calls(tools_to_call, thread_id, run_id):
