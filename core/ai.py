@@ -2,8 +2,8 @@
 
 from openai import OpenAI
 import numpy as np
-import cv2
-import pytesseract
+# import cv2
+# import pytesseract
 from utils.profile import (
     generate_otp, 
     verify_otp
@@ -40,8 +40,6 @@ import os
 import json
 import time
 from dotenv import load_dotenv
-import cv2
-import pytesseract
 
 load_dotenv(
     dotenv_path="ops/.env",
@@ -147,12 +145,16 @@ def process_profile(parameters, tool_id, thread_id, run_id):
     """
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
-    otp_check = get_redis_value('otp_check')
+    otp_verified = get_redis_value("otp_verified")
     # otp_check = False
-    if otp_check is True:
-        delete_redis('otp_check')
-    else:
-        return 0 # 0 for false profile creation
+    if otp_verified != "true":
+        error = "OTP not verified. Please verify OTP before creating profile."
+        history = {
+            "thread_id": thread_id,
+            "run_id": run_id,
+            "status": "failed",
+        }
+        return error, history
     
     id = profile_creation(parameters) # id is int
     set_redis("PID", id)
@@ -300,6 +302,7 @@ def process_OTP(parameters, tool_id, thread_id, run_id):
     print("number is", number)
         
     if generate_otp(number):
+        # set_redis("current_mobile", number) 
         tool_output_array = [
             {
                 "tool_call_id": tool_id,
@@ -343,7 +346,12 @@ def process_vOTP(parameters, tool_id, thread_id, run_id):
     print("Submitted OTP is", otp)
     print("type of parameters is: ", type(parameters))
 
+    # stored_number = get_redis_value("current_mobile")
+    
     if verify_otp(otp):
+        
+        set_redis("otp_verified", "true")
+        
         tool_output_array = [
             {
                 "tool_call_id": tool_id,
@@ -446,6 +454,7 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     """
     Main chat logic using OpenAI assistant API and function calling API
     """
+    set_redis("otp_verified", "false")  # Reset OTP verification status
     # setting default assistant_message
     assistant_message = "Something went wrong. Please try again later."    
     history = get_metadata(chat_id)
@@ -562,35 +571,35 @@ def parse_photo_text(photo_text):
         response = "Cannot read image. Input all details as text"
     return response
 
-def process_image(chat_id, image_data):
-    """
-    Process the uploaded image and extract text using OCR.
+# def process_image(chat_id, image_data):
+#     """
+#     Process the uploaded image and extract text using OCR.
 
-    Parameters:
-    - chat_id (int): The ID of the chat.
-    - image_data (str): Binary data of the uploaded image.
+#     Parameters:
+#     - chat_id (int): The ID of the chat.
+#     - image_data (str): Binary data of the uploaded image.
 
-    Returns:
-    - text (str): The extracted text from the image.
-    """
-    # Process the uploaded image as needed
-    # Decode the image from binary data
-    image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+#     Returns:
+#     - text (str): The extracted text from the image.
+#     """
+#     # Process the uploaded image as needed
+#     # Decode the image from binary data
+#     image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
 
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#     # Convert the image to grayscale
+#     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Apply thresholding to preprocess the image
-    threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+#     # Apply thresholding to preprocess the image
+#     threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    # Set the path to the Tesseract executable
-    pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
+#     # Set the path to the Tesseract executable
+#     pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
 
-    # Perform text extraction using pytesseract
-    text = pytesseract.image_to_string(threshold)
-    print(f"text from inside the func is {text}")
+#     # Perform text extraction using pytesseract
+#     text = pytesseract.image_to_string(threshold)
+#     print(f"text from inside the func is {text}")
 
-    return text
+#     return text
 
 # def process_parameters(parameters):
 #     # The JSON string containing the function arguments

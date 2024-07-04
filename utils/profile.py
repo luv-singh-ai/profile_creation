@@ -107,11 +107,12 @@ def verify_otp(text):
         print(response.text)
         answer = json.loads(response.text)
         if answer.get("message") == "Success": # {"status": 200, "message": "Success"}
+            # set_redis("otp_verified", "true")  #  OTP verification status
             return True
         else:
             # {"status": 200, "message": "Invalid OTP"}
             print("Invalid OTP")
-            set_redis('otp_check', False)
+            # set_redis('otp_verified', False)
             return False
     except requests.RequestException as e:
         print(f"Error: {e}")

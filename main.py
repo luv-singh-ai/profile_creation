@@ -28,8 +28,8 @@ from core.ai import (
     audio_chat, 
     bhashini_text_chat, 
     bhashini_audio_chat,
-    parse_photo_text,
-    process_image
+    parse_photo_text
+    # process_image
 )
 
 from utils.redis_utils import (
@@ -37,8 +37,8 @@ from utils.redis_utils import (
     get_redis_value,
     delete_redis
 )
-import pytesseract
-from PIL import Image
+# import pytesseract
+# from PIL import Image
 from utils.openai_utils import (
     get_duration_pydub, 
     get_random_wait_messages
@@ -72,7 +72,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     try:
         context.user_data.clear()
-        keys_to_delete = ['thread_id', 'chat_id', 'PID','number'] # 'assistant_id'
+        keys_to_delete = ['otp_verified','thread_id', 'chat_id', 'PID','number'] # 'assistant_id'
         # Delete the specified keys
         for key in keys_to_delete:
             delete_redis(key)
@@ -151,50 +151,50 @@ async def query_handler(update: Update, context: CallbackContext):
     elif update.message.voice:
         voice = await context.bot.get_file(update.message.voice.file_id)
         await talk_handler(update, context, voice)
-    elif update.message.photo:
-        photo = await context.bot.get_file(update.message.photo[-1].file_id) # update.message.photo[0].file_id
-        await photo_handler(update, context, photo)
+    # elif update.message.photo:
+    #     photo = await context.bot.get_file(update.message.photo[-1].file_id) # update.message.photo[0].file_id
+    #     await photo_handler(update, context, photo)
 
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
+# async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
     
-    assistant_message = ""
-    chat_id = update.effective_chat.id
-    lang = context.user_data.get('lang')
+#     assistant_message = ""
+#     chat_id = update.effective_chat.id
+#     lang = context.user_data.get('lang')
     
-    with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
-        await photo.download_to_drive(custom_path=temp_image_file.name)
-        chat_id = update.effective_chat.id
+#     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
+#         await photo.download_to_drive(custom_path=temp_image_file.name)
+#         chat_id = update.effective_chat.id
 
-        wait_message = get_random_wait_messages(
-                not_always=True,
-                lang=lang
-        )
-        if wait_message:
-            await context.bot.send_message(chat_id=chat_id, text=wait_message)
+#         wait_message = get_random_wait_messages(
+#                 not_always=True,
+#                 lang=lang
+#         )
+#         if wait_message:
+#             await context.bot.send_message(chat_id=chat_id, text=wait_message)
 
-        with open(temp_image_file.name, "rb") as file: # Open the image file in binary mode
-            photo_data = file.read()
-            text = process_image(chat_id, photo_data) # file
-            print(f"text is {text}")
-            text_1 = parse_photo_text(text)
-            assistant_message, history = chat(chat_id, text_1)
-            print(f"assistant_message is {assistant_message}")
-            print(type(assistant_message))
-            # response_photo, assistant_message, history = parse_photo_text(
-            #     chat_id, photo_file=open(temp_image_file.name, "rb")
-            # )
-            # response_photo.stream_to_file(temp_image_file.name)
-            #duration = get_duration_pydub(temp_image_file.name)
-            # await context.bot.send_photo(
-            #     chat_id=chat_id, 
-            #     #photo=open(temp_image_file.name, "rb"), 
-            #     filename="response.jpg",
-            #     performer="Yojana Didi",
-            # )
-            await context.bot.send_message(
-                chat_id=chat_id, text=assistant_message # try adding [0] if it doesn't work
-            )
-            file.close()
+#         with open(temp_image_file.name, "rb") as file: # Open the image file in binary mode
+#             photo_data = file.read()
+#             text = process_image(chat_id, photo_data) # file
+#             print(f"text is {text}")
+#             text_1 = parse_photo_text(text)
+#             assistant_message, history = chat(chat_id, text_1)
+#             print(f"assistant_message is {assistant_message}")
+#             print(type(assistant_message))
+#             # response_photo, assistant_message, history = parse_photo_text(
+#             #     chat_id, photo_file=open(temp_image_file.name, "rb")
+#             # )
+#             # response_photo.stream_to_file(temp_image_file.name)
+#             #duration = get_duration_pydub(temp_image_file.name)
+#             # await context.bot.send_photo(
+#             #     chat_id=chat_id, 
+#             #     #photo=open(temp_image_file.name, "rb"), 
+#             #     filename="response.jpg",
+#             #     performer="Yojana Didi",
+#             # )
+#             await context.bot.send_message(
+#                 chat_id=chat_id, text=assistant_message # try adding [0] if it doesn't work
+#             )
+#             file.close()
 
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
     response = ""
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     # application.add_handler(otp_handler)
     application.add_handler(
         MessageHandler(
-            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)) | (filters.PHOTO & (~filters.COMMAND)), 
+            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
             response_handler
         )
     )
