@@ -21,6 +21,7 @@ from telegram.ext import (
     filters,
     CallbackContext,
     CallbackQueryHandler,
+    ConversationHandler
 )
 
 from core.ai import (
@@ -291,6 +292,115 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                 )
                 file_.close()
 
+# NEW CODE
+# from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+# from telegram.ext import CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters
+from utils.openai_utils import get_full_details
+# Define states for our conversation handler
+(RELIGION, CASTE, RATION_CARD, LAND_OWNERSHIP, OCCUPATIONAL_STATUS, MONTHLY_INCOME) = range(6)
+
+# Define a dictionary to store user responses
+user_responses = {}
+
+async def start_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = update.effective_user.id
+    user_responses[user_id] = {}
+    
+    keyboard = [
+        [InlineKeyboardButton(religion.split('(')[0], callback_data=religion)]
+        for religion in get_full_details['properties']['Religion(CT0000OU)']['enum']
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Please select your religion:", reply_markup=reply_markup)
+    return RELIGION
+
+async def religion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    user_responses[user_id]['Religion(CT0000OU)'] = query.data
+
+    keyboard = [
+        [InlineKeyboardButton(caste.split('(')[0], callback_data=caste)]
+        for caste in get_full_details['properties']['Caste Category(CT00003I)']['enum']
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text("Please select your caste category:", reply_markup=reply_markup)
+    return CASTE
+
+async def caste_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    selected_caste = query.data
+    user_responses[user_id]['Caste Category(CT00003I)'] = query.data
+
+    keyboard = [
+        [InlineKeyboardButton(ration.split('(')[0], callback_data=ration)]
+        for ration in get_full_details['properties']['Ration card type(CT00001D)']['enum']
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text("Please select your ration card type:", reply_markup=reply_markup)
+    return RATION_CARD
+
+async def ration_card_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    selected_ration = query.data
+    user_responses[user_id]['Ration card type(CT00001D)'] = query.data
+
+    keyboard = [
+        [InlineKeyboardButton(land.split('(')[0], callback_data=land)]
+        for land in get_full_details['properties']['Land Ownership(CT0001AJ)']['enum']
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text("Please select your land ownership status:", reply_markup=reply_markup)
+    return LAND_OWNERSHIP
+
+async def land_ownership_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    selected_land = query.data
+    user_responses[user_id]['Land Ownership(CT0001AJ)'] = query.data
+
+    keyboard = [
+        [InlineKeyboardButton(status.split('(')[0], callback_data=status)]
+        for status in get_full_details['properties']['Occupational Status(CT0000PF)']['enum']
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text("Please select your occupational status:", reply_markup=reply_markup)
+    return OCCUPATIONAL_STATUS
+
+async def occupational_status_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    user_responses[user_id]['Occupational Status(CT0000PF)'] = query.data
+
+    await query.edit_message_text("Please enter your monthly income:")
+    return MONTHLY_INCOME
+
+async def monthly_income(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = update.effective_user.id
+    user_responses[user_id]['Personal Monthly Income(CT000013)'] = float(update.message.text)
+
+    # Process the collected data
+    await process_full_details(update, context, user_responses[user_id])
+    del user_responses[user_id]  # Clean up
+    return ConversationHandler.END
+
+async def process_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE, details: dict):
+    chat_id = update.effective_chat.id
+    # Call the existing process_full_details function from ai.py
+    # You'll need to modify this function to accept the details directly
+    assistant_message, history = await process_full_details(chat_id, details, context.bot_data['thread_id'], context.bot_data['run_id'])
+    await update.message.reply_text(assistant_message)
+
+# Add this to your main() function
+
+
 if __name__ == '__main__':
     application = ApplicationBuilder().token(
         token
@@ -298,11 +408,24 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start)
     language_handler_ = CommandHandler('set_language', language_handler)
     chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('full_details', start_full_details)],
+        states={
+            RELIGION: [CallbackQueryHandler(religion_callback)],
+            CASTE: [CallbackQueryHandler(caste_callback)],
+            RATION_CARD: [CallbackQueryHandler(ration_card_callback)],
+            LAND_OWNERSHIP: [CallbackQueryHandler(land_ownership_callback)],
+            OCCUPATIONAL_STATUS: [CallbackQueryHandler(occupational_status_callback)],
+            MONTHLY_INCOME: [MessageHandler(filters.TEXT & ~filters.COMMAND, monthly_income)],
+        },
+        fallbacks=[],
+)
     # otp_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler)
     # otpv_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler_1)
     application.add_handler(start_handler)
     application.add_handler(language_handler_)
     application.add_handler(chosen_language)
+    application.add_handler(conv_handler)
     # application.add_handler(otp_handler)
     application.add_handler(
         MessageHandler(
@@ -311,3 +434,4 @@ if __name__ == '__main__':
         )
     )
     application.run_polling()
+

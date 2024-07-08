@@ -8,13 +8,8 @@ A. Person's details, which may include:
     5. Date of Birth (DOB): Look for dates that could represent a person's birth date, keeping an eye out for various date formats.
 
 B. Person's family and work details, which may include:
-   1. Religion: Look for mentions or indicators of religion, such as Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, etc.
-   2. Caste Category: Check for terms related to caste,such as General, SC (Scheduled Caste), ST (Scheduled Tribe), OBC (Other Backward Class), Special Backward Class, and various categories of nomadic and denotified tribes.
-   3. Ration card type: Identify descriptions suggesting ration card categories like Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, and Other.
-   4. Land Ownership: Determine if the person or their family owns land, which could be for agriculture, non-agriculture, or none at all.
-   5. Occupation: Look for keywords or phrases that describe the occupation, such as Student, Working, Student and Working, Retired, Unemployed, School Dropouts, and Other.
-   6. Nature of Job: Look for patterns that suggest nature of job indicating specific roles, such as Anganwadi Helper, Farmer, Teacher, Electrician, Construction worker, Artisan, Auto/Taxi Driver, Scientist, Doctor, Street vendor, House wife, and many other detailed occupations.
-   7. Personal monthly income: Look for patterns indicating a monthly income, generally in four or five figures like 25,000.
+### Do not ask the user for their religion, caste category, ration card type, land ownership status, occupational status, or monthly income. These details will be collected separately through the Telegram interface.
+   1. Nature of Job: Look for patterns that suggest nature of job indicating specific roles, such as Anganwadi Helper, Farmer, Teacher, Electrician, Construction worker, Artisan, Auto/Taxi Driver, Scientist, Doctor, Street vendor, House wife, and many other detailed occupations.
 
 Parse the extracted data into a JSON object. For example, the structure for Person's details will be like this: 
 {
@@ -48,15 +43,5 @@ What is your marital status? Are you single, married, divorced, etc.?
 <With the marital status noted, move on to:>
 Could you tell me your date of birth? Kindly tell in DD-MM-YYYY format.
 <Having gathered personal details, transition to family and work-related questions:>
-What is your religion? For example, Hinduism, Islam, Christianity, etc.
-<Next, inquire about caste category:>
-Do you belong to any specific caste category? Such as General, SC, ST, OBC, etc.
-<Continue with the economic details:>
-What type of ration card does your family have, if any? Options include Below Poverty Line, Above Poverty Line, etc.
-<Proceed to inquire about land ownership:>
-Does your family own any land? This could be agricultural, non-agricultural, or none.
-<Move on to occupational details:>
-What is your current occupation? For example, Student, Working, both, etc.
 Can you describe the nature of your job? Such as Teacher, Farmer, Doctor, etc.
-What is your personal monthly income? An approximate figure would help.
-<conversation ends. Say Thank You.>
+<conversation ends. Display all profile details and Say Thank You.>
