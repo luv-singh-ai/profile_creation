@@ -51,25 +51,99 @@ get_user_details = {
                 "type": "string", # 'integer'
                 "description": "10 digit mobile number. If it has prefix '+91-' at start, then consider mobile number after prefix."
             },
-            "gender":{
-                "type": "string",
-                "description": "Identify gender mentions, recognizing terms for male, female, or other identities. For example, if a person identifies as male, female, or another gender, assign 'M', 'F', or 'O' respectively.",
-                "enum": ["M", "F", "O"], # M for Male, F for Female, O for Other
-            },
-            "maritalStatus": {
-                "type": "string",
-                "description": "Marital Status of Person. For example, if a person is single, married, divorced, widowed, or other, assign 'Single', 'Married', 'Divorced', 'Widowed', or 'Others' respectively.",
-                "enum": ["Single", "Married", "Divorced", "Widowed", "Others"]
-            },
             "dob": {
                 "type": "string",
-                "description": "Date of Birth of Person. Format is YYYY-MM-DD"
+                "description": "Date of Birth of Person. Format is DD-MM-YYYY"
             }
         },
-        "required": ["firstName", "lastName", "mobile", "gender", "maritalStatus", "dob"]
+        "required": ["firstName", "lastName", "mobile", "dob"]
     }
 }
 
+# KEYBOARD option
+ # "gender":{
+#     "type": "string",
+#     "description": "Identify gender mentions, recognizing terms for male, female, or other identities. For example, if a person identifies as male, female, or another gender, assign 'M', 'F', or 'O' respectively.",
+#     "enum": ["M", "F", "O"], # M for Male, F for Female, O for Other
+# },
+# "maritalStatus": {
+#     "type": "string",
+#     "description": "Marital Status of Person. For example, if a person is single, married, divorced, widowed, or other, assign 'Single', 'Married', 'Divorced', 'Widowed', or 'Others' respectively.",
+#     "enum": ["Single", "Married", "Divorced", "Widowed", "Others"]
+# },
+# "Religion(CT0000OU)": {
+#     "type": "string",
+#     "description": "Get religion of person under Family Details. For example, whether a person is following Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, Zoroastrians (Parsis), Not Applicable, Prefer not to say, or Other.",
+#     "enum": [
+#         "Hinduism(CT0000OT)", 
+#         "Islam(CT000036)", 
+#         "Christianity(CT000039)", 
+#         "Buddhism(CT00003A)", 
+#         "Jainism(CT00003C)", 
+#         "Sikhism(CT000037)", 
+#         "Zoroastrians (Parsis)(CT00003B)", 
+#         "Not Applicable(CT0001QF)", 
+#         "Prefer not to say(CT0005BC)", 
+#         "Other(CT00004W)"
+#     ]
+#     },
+#     "Caste Category(CT00003I)": {
+#     "type": "string",
+#     "description": "Get caste category of person under Family Details. For example, whether a person belongs to General, SC, ST, OBC, Special Backward Class, Vimukta Jati-A/Denotified tribes-A, Nomadic tribes-B, Nomadic tribes-C, Nomadic tribes-D, or Other.",
+#     "enum": [
+#         "General(LT000001)", 
+#         "SC(LT000002)", 
+#         "ST(LT000003)", 
+#         "OBC(LT000004)", 
+#         "Special Backward Class(LT000005)", 
+#         "Vimukta Jati-A/Denotified tribes-A(LT000006)", 
+#         "Nomadic tribes-B(LT000007)", 
+#         "Nomadic tribes-C(LT000008)", 
+#         "Nomadic tribes-D(LT000009)", 
+#         "Other(LT00000A)"
+#     ]
+#     },
+#     "Ration card type(CT00001D)": {
+#     "type": "string",
+#     "description": "Get type of ration card held by the family. For example, whether it is Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, or Other.",
+#     "enum": [
+#         "Below Poverty Line(CT00002D)", 
+#         "Above Poverty Line(CT00002C)", 
+#         "Antyodaya Anna Yojana(CT0000OH)", 
+#         "State BPL(CT000129)", 
+#         "Annapurna scheme beneficiaries(CT0001HR)", 
+#         "In process(CT0000U6)", 
+#         "Not available(CT000068)", 
+#         "Not Applicable(CT0001QF)", 
+#         "Priority Household(CT0005BF)", 
+#         "Other(CT00004W)"
+#     ]
+#     },
+#     "Land Ownership(CT0001AJ)": {
+#     "type": "string",
+#     "description": "Get land ownership status under Family Details. For example, whether any family members own land for agriculture, non-agriculture, or do not own any land.",
+#     "enum": [
+#         "Yes - for agriculture(CT0001AH)", 
+#         "Yes - for non-agriculture(CT0001AI)", 
+#         "No(CT00003K)"
+#     ]
+#     },
+#     "Occupational Status(CT0000PF)": {
+#     "type": "string",
+#     "description": "Get the present occupational status of the person. For example, whether they are a Student, Working, Student and Working, Retired, Unemployed, or School Dropout.",
+#     "enum": [
+#         "Student(CT0000P8)", 
+#         "Working(CT00019G)", 
+#         "Student and Working(CT0001AA)", 
+#         "Retired(CT0000PV)", 
+#         "Unemployed(CT0000PD)", 
+#         "School Dropout(CT0001TY)"
+#     ]
+#     },
+#     "Personal Monthly Income(CT000013)": {
+#     "type": "number",
+#     "description": "Get the personal monthly income of the person. Enter the amount in local currency."
+#     },
 # mini screening questions 
 get_full_details = {
     "name": "get_full_details",
@@ -77,79 +151,6 @@ get_full_details = {
     "parameters": {
         "type": "object",
         "properties": {
-            "Religion(CT0000OU)": {
-                "type": "string",
-                "description": "Get religion of person under Family Details. For example, whether a person is following Hinduism, Islam, Christianity, Buddhism, Jainism, Sikhism, Zoroastrians (Parsis), Not Applicable, Prefer not to say, or Other.",
-                "enum": [
-                    "Hinduism(CT0000OT)", 
-                    "Islam(CT000036)", 
-                    "Christianity(CT000039)", 
-                    "Buddhism(CT00003A)", 
-                    "Jainism(CT00003C)", 
-                    "Sikhism(CT000037)", 
-                    "Zoroastrians (Parsis)(CT00003B)", 
-                    "Not Applicable(CT0001QF)", 
-                    "Prefer not to say(CT0005BC)", 
-                    "Other(CT00004W)"
-                ]
-            },
-            "Caste Category(CT00003I)": {
-                "type": "string",
-                "description": "Get caste category of person under Family Details. For example, whether a person belongs to General, SC, ST, OBC, Special Backward Class, Vimukta Jati-A/Denotified tribes-A, Nomadic tribes-B, Nomadic tribes-C, Nomadic tribes-D, or Other.",
-                "enum": [
-                    "General(LT000001)", 
-                    "SC(LT000002)", 
-                    "ST(LT000003)", 
-                    "OBC(LT000004)", 
-                    "Special Backward Class(LT000005)", 
-                    "Vimukta Jati-A/Denotified tribes-A(LT000006)", 
-                    "Nomadic tribes-B(LT000007)", 
-                    "Nomadic tribes-C(LT000008)", 
-                    "Nomadic tribes-D(LT000009)", 
-                    "Other(LT00000A)"
-                ]
-            },
-            "Ration card type(CT00001D)": {
-                "type": "string",
-                "description": "Get type of ration card held by the family. For example, whether it is Below Poverty Line, Above Poverty Line, Antyodaya Anna Yojana, State BPL, Annapurna scheme beneficiaries, In process, Not available, Not Applicable, Priority Household, or Other.",
-                "enum": [
-                    "Below Poverty Line(CT00002D)", 
-                    "Above Poverty Line(CT00002C)", 
-                    "Antyodaya Anna Yojana(CT0000OH)", 
-                    "State BPL(CT000129)", 
-                    "Annapurna scheme beneficiaries(CT0001HR)", 
-                    "In process(CT0000U6)", 
-                    "Not available(CT000068)", 
-                    "Not Applicable(CT0001QF)", 
-                    "Priority Household(CT0005BF)", 
-                    "Other(CT00004W)"
-                ]
-            },
-            "Land Ownership(CT0001AJ)": {
-                "type": "string",
-                "description": "Get land ownership status under Family Details. For example, whether any family members own land for agriculture, non-agriculture, or do not own any land.",
-                "enum": [
-                    "Yes - for agriculture(CT0001AH)", 
-                    "Yes - for non-agriculture(CT0001AI)", 
-                    "No(CT00003K)"
-                ]
-            },
-            "Occupational Status(CT0000PF)": {
-                "type": "string",
-                "description": "Get the present occupational status of the person. For example, whether they are a Student, Working, Student and Working, Retired, Unemployed, or School Dropout.",
-                "enum": [
-                    "Student(CT0000P8)", 
-                    "Working(CT00019G)", 
-                    "Student and Working(CT0001AA)", 
-                    "Retired(CT0000PV)", 
-                    "Unemployed(CT0000PD)", 
-                    "School Dropout(CT0001TY)"
-                ]
-            },
-            "Personal Monthly Income(CT000013)": {
-                "type": "number",
-                "description": "Get the personal monthly income of the person. Enter the amount in local currency."
-            },
             #keyboard option
             "Nature of Job(CT000015)": {
                 "type": "string",
@@ -161,7 +162,7 @@ get_full_details = {
             # string dropdown using regex 
             # partial string matching using difflib
         },
-        "required": ["Religion(CT0000OU)", "Caste Category(CT00003I)", "Ration card type(CT00001D)", "Land Ownership(CT0001AJ), Occupational Status(CT0000PF),Nature of Job(CT000015), Personal Monthly Income(CT000013)"]
+        "required": ["Nature of Job(CT000015)"]
     }
 }
 
@@ -235,6 +236,7 @@ def create_thread(client):
     thread = client.beta.threads.create()
     return thread
 
+# add streaming here
 def create_run(client, thread_id, assistant_id):
     run = client.beta.threads.runs.create(
         thread_id=thread_id,

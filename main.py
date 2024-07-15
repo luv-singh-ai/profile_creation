@@ -8,10 +8,16 @@ import asyncio
 import logging
 import dotenv
 
+from utils.openai_utils import (
+    get_full_details,
+    get_user_details
+)
+
 from telegram import (
     Update, 
     InlineKeyboardButton, 
-    InlineKeyboardMarkup
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup
 )
 from telegram.ext import (
     ApplicationBuilder,
@@ -155,6 +161,41 @@ async def query_handler(update: Update, context: CallbackContext):
     # elif update.message.photo:
     #     photo = await context.bot.get_file(update.message.photo[-1].file_id) # update.message.photo[0].file_id
     #     await photo_handler(update, context, photo)
+
+### keyboard options
+# Define states
+GENDER, MARITAL_STATUS= range(2)
+gender_keyboard = [['Male', 'Female']]
+marital_status_keyboard = [['Married', 'Unmarried']]
+
+async def start(update: Update, context):
+    await update.message.reply_text(
+        "Welcome! Let's collect some demographic information. "
+        "Please select your gender:",
+        reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
+    )
+    return GENDER
+
+async def gender(update: Update, context):
+    context.user_data['gender'] = update.message.text
+    await update.message.reply_text(
+        "Thank you. Now, please select your marital status:",
+        reply_markup=ReplyKeyboardMarkup(marital_status_keyboard, one_time_keyboard=True)
+    )
+    return MARITAL_STATUS
+
+async def marital_status(update: Update, context):
+    context.user_data['marital_status'] = update.message.text
+    await update.message.reply_text(
+        f"Thank you for providing your information!\n\n"
+        f"Gender: {context.user_data['gender']}\n"
+        f"Marital Status: {context.user_data['marital_status']}"
+    )
+    return ConversationHandler.END
+
+async def cancel(update: Update, context):
+    await update.message.reply_text("Operation cancelled. To start again, use the /start command.")
+    return ConversationHandler.END
 
 # async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
     
@@ -408,7 +449,32 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start)
     language_handler_ = CommandHandler('set_language', language_handler)
     chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
-    conv_handler = ConversationHandler(
+    
+    application.add_handler(start_handler)
+    application.add_handler(language_handler_)
+    application.add_handler(chosen_language)
+    
+    # application.add_handler(otp_handler)
+    application.add_handler(
+        MessageHandler(
+            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
+            response_handler
+        )
+    )
+    
+    # Add conversation handlers for language selection and full details
+    conv_handler_1 = ConversationHandler(
+    entry_points=[CommandHandler('start', start)],
+    states={
+        GENDER: [MessageHandler(filters.Regex('^(Male|Female)$'), gender)],
+        MARITAL_STATUS: [MessageHandler(filters.Regex('^(Married|Unmarried)$'), marital_status)],
+    },
+        fallbacks=[CommandHandler('cancel', cancel)],
+    )
+
+    application.add_handler(conv_handler_1)
+    
+    conv_handler_2 = ConversationHandler(
         entry_points=[CommandHandler('full_details', start_full_details)],
         states={
             RELIGION: [CallbackQueryHandler(religion_callback)],
@@ -419,19 +485,11 @@ if __name__ == '__main__':
             MONTHLY_INCOME: [MessageHandler(filters.TEXT & ~filters.COMMAND, monthly_income)],
         },
         fallbacks=[],
-)
+    )
+    
+    application.add_handler(conv_handler_2)
     # otp_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler)
     # otpv_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler_1)
-    application.add_handler(start_handler)
-    application.add_handler(language_handler_)
-    application.add_handler(chosen_language)
-    application.add_handler(conv_handler)
-    # application.add_handler(otp_handler)
-    application.add_handler(
-        MessageHandler(
-            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
-            response_handler
-        )
-    )
+    
     application.run_polling()
 
