@@ -165,13 +165,12 @@ async def query_handler(update: Update, context: CallbackContext):
 ### keyboard options
 # Define states
 GENDER, MARITAL_STATUS= range(2)
-gender_keyboard = [['Male', 'Female']]
-marital_status_keyboard = [['Married', 'Unmarried']]
+gender_keyboard = [['Male', 'Female', 'Other']] # ["M", "F", "O"], # M for Male, F for Female, O for Other
+marital_status_keyboard = [['Married', 'Divorced','Single', 'Widowed', 'Others']] # ["Single", "Married", "Divorced", "Widowed", "Others"]
 
-async def start(update: Update, context):
+async def keyboard_start(update: Update, context):
     await update.message.reply_text(
-        "Welcome! Let's collect some demographic information. "
-        "Please select your gender:",
+        "Welcome! Please select your gender: ",
         reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
     )
     return GENDER
@@ -188,6 +187,7 @@ async def marital_status(update: Update, context):
     context.user_data['marital_status'] = update.message.text
     await update.message.reply_text(
         f"Thank you for providing your information!\n\n"
+        # later comment these two lines
         f"Gender: {context.user_data['gender']}\n"
         f"Marital Status: {context.user_data['marital_status']}"
     )
@@ -196,47 +196,6 @@ async def marital_status(update: Update, context):
 async def cancel(update: Update, context):
     await update.message.reply_text("Operation cancelled. To start again, use the /start command.")
     return ConversationHandler.END
-
-# async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
-    
-#     assistant_message = ""
-#     chat_id = update.effective_chat.id
-#     lang = context.user_data.get('lang')
-    
-#     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
-#         await photo.download_to_drive(custom_path=temp_image_file.name)
-#         chat_id = update.effective_chat.id
-
-#         wait_message = get_random_wait_messages(
-#                 not_always=True,
-#                 lang=lang
-#         )
-#         if wait_message:
-#             await context.bot.send_message(chat_id=chat_id, text=wait_message)
-
-#         with open(temp_image_file.name, "rb") as file: # Open the image file in binary mode
-#             photo_data = file.read()
-#             text = process_image(chat_id, photo_data) # file
-#             print(f"text is {text}")
-#             text_1 = parse_photo_text(text)
-#             assistant_message, history = chat(chat_id, text_1)
-#             print(f"assistant_message is {assistant_message}")
-#             print(type(assistant_message))
-#             # response_photo, assistant_message, history = parse_photo_text(
-#             #     chat_id, photo_file=open(temp_image_file.name, "rb")
-#             # )
-#             # response_photo.stream_to_file(temp_image_file.name)
-#             #duration = get_duration_pydub(temp_image_file.name)
-#             # await context.bot.send_photo(
-#             #     chat_id=chat_id, 
-#             #     #photo=open(temp_image_file.name, "rb"), 
-#             #     filename="response.jpg",
-#             #     performer="Yojana Didi",
-#             # )
-#             await context.bot.send_message(
-#                 chat_id=chat_id, text=assistant_message # try adding [0] if it doesn't work
-#             )
-#             file.close()
 
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
     response = ""
@@ -343,153 +302,195 @@ from utils.openai_utils import get_full_details
 # Define a dictionary to store user responses
 user_responses = {}
 
-async def start_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user_id = update.effective_user.id
-    user_responses[user_id] = {}
+# async def start_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     user_id = update.effective_user.id
+#     user_responses[user_id] = {}
     
-    keyboard = [
-        [InlineKeyboardButton(religion.split('(')[0], callback_data=religion)]
-        for religion in get_full_details['properties']['Religion(CT0000OU)']['enum']
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Please select your religion:", reply_markup=reply_markup)
-    return RELIGION
+#     keyboard = [
+#         [InlineKeyboardButton(religion.split('(')[0], callback_data=religion)]
+#         for religion in get_full_details['properties']['Religion(CT0000OU)']['enum']
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await update.message.reply_text("Please select your religion:", reply_markup=reply_markup)
+#     return RELIGION
 
-async def religion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    user_id = update.effective_user.id
-    user_responses[user_id]['Religion(CT0000OU)'] = query.data
+# async def religion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     query = update.callback_query
+#     await query.answer()
+#     user_id = update.effective_user.id
+#     user_responses[user_id]['Religion(CT0000OU)'] = query.data
 
-    keyboard = [
-        [InlineKeyboardButton(caste.split('(')[0], callback_data=caste)]
-        for caste in get_full_details['properties']['Caste Category(CT00003I)']['enum']
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text("Please select your caste category:", reply_markup=reply_markup)
-    return CASTE
+#     keyboard = [
+#         [InlineKeyboardButton(caste.split('(')[0], callback_data=caste)]
+#         for caste in get_full_details['properties']['Caste Category(CT00003I)']['enum']
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await query.edit_message_text("Please select your caste category:", reply_markup=reply_markup)
+#     return CASTE
 
-async def caste_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    user_id = update.effective_user.id
-    selected_caste = query.data
-    user_responses[user_id]['Caste Category(CT00003I)'] = query.data
+# async def caste_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     query = update.callback_query
+#     await query.answer()
+#     user_id = update.effective_user.id
+#     selected_caste = query.data
+#     user_responses[user_id]['Caste Category(CT00003I)'] = query.data
 
-    keyboard = [
-        [InlineKeyboardButton(ration.split('(')[0], callback_data=ration)]
-        for ration in get_full_details['properties']['Ration card type(CT00001D)']['enum']
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text("Please select your ration card type:", reply_markup=reply_markup)
-    return RATION_CARD
+#     keyboard = [
+#         [InlineKeyboardButton(ration.split('(')[0], callback_data=ration)]
+#         for ration in get_full_details['properties']['Ration card type(CT00001D)']['enum']
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await query.edit_message_text("Please select your ration card type:", reply_markup=reply_markup)
+#     return RATION_CARD
 
-async def ration_card_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    user_id = update.effective_user.id
-    selected_ration = query.data
-    user_responses[user_id]['Ration card type(CT00001D)'] = query.data
+# async def ration_card_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     query = update.callback_query
+#     await query.answer()
+#     user_id = update.effective_user.id
+#     selected_ration = query.data
+#     user_responses[user_id]['Ration card type(CT00001D)'] = query.data
 
-    keyboard = [
-        [InlineKeyboardButton(land.split('(')[0], callback_data=land)]
-        for land in get_full_details['properties']['Land Ownership(CT0001AJ)']['enum']
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text("Please select your land ownership status:", reply_markup=reply_markup)
-    return LAND_OWNERSHIP
+#     keyboard = [
+#         [InlineKeyboardButton(land.split('(')[0], callback_data=land)]
+#         for land in get_full_details['properties']['Land Ownership(CT0001AJ)']['enum']
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await query.edit_message_text("Please select your land ownership status:", reply_markup=reply_markup)
+#     return LAND_OWNERSHIP
 
-async def land_ownership_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    user_id = update.effective_user.id
-    selected_land = query.data
-    user_responses[user_id]['Land Ownership(CT0001AJ)'] = query.data
+# async def land_ownership_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     query = update.callback_query
+#     await query.answer()
+#     user_id = update.effective_user.id
+#     selected_land = query.data
+#     user_responses[user_id]['Land Ownership(CT0001AJ)'] = query.data
 
-    keyboard = [
-        [InlineKeyboardButton(status.split('(')[0], callback_data=status)]
-        for status in get_full_details['properties']['Occupational Status(CT0000PF)']['enum']
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text("Please select your occupational status:", reply_markup=reply_markup)
-    return OCCUPATIONAL_STATUS
+#     keyboard = [
+#         [InlineKeyboardButton(status.split('(')[0], callback_data=status)]
+#         for status in get_full_details['properties']['Occupational Status(CT0000PF)']['enum']
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await query.edit_message_text("Please select your occupational status:", reply_markup=reply_markup)
+#     return OCCUPATIONAL_STATUS
 
-async def occupational_status_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    user_id = update.effective_user.id
-    user_responses[user_id]['Occupational Status(CT0000PF)'] = query.data
+# async def occupational_status_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     query = update.callback_query
+#     await query.answer()
+#     user_id = update.effective_user.id
+#     user_responses[user_id]['Occupational Status(CT0000PF)'] = query.data
 
-    await query.edit_message_text("Please enter your monthly income:")
-    return MONTHLY_INCOME
+#     await query.edit_message_text("Please enter your monthly income:")
+#     return MONTHLY_INCOME
 
-async def monthly_income(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user_id = update.effective_user.id
-    user_responses[user_id]['Personal Monthly Income(CT000013)'] = float(update.message.text)
+# async def monthly_income(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#     user_id = update.effective_user.id
+#     user_responses[user_id]['Personal Monthly Income(CT000013)'] = float(update.message.text)
 
-    # Process the collected data
-    await process_full_details(update, context, user_responses[user_id])
-    del user_responses[user_id]  # Clean up
-    return ConversationHandler.END
+#     # Process the collected data
+#     await process_full_details(update, context, user_responses[user_id])
+#     del user_responses[user_id]  # Clean up
+#     return ConversationHandler.END
 
-async def process_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE, details: dict):
-    chat_id = update.effective_chat.id
-    # Call the existing process_full_details function from ai.py
-    # You'll need to modify this function to accept the details directly
-    assistant_message, history = await process_full_details(chat_id, details, context.bot_data['thread_id'], context.bot_data['run_id'])
-    await update.message.reply_text(assistant_message)
+# async def process_full_details(update: Update, context: ContextTypes.DEFAULT_TYPE, details: dict):
+#     chat_id = update.effective_chat.id
+#     # Call the existing process_full_details function from ai.py
+#     # You'll need to modify this function to accept the details directly
+#     assistant_message, history = await process_full_details(chat_id, details, context.bot_data['thread_id'], context.bot_data['run_id'])
+#     await update.message.reply_text(assistant_message)
 
-# Add this to your main() function
+# # Add this to your main() function
 
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(
         token
     ).read_timeout(30).write_timeout(30).build()
-    start_handler = CommandHandler('start', start)
-    language_handler_ = CommandHandler('set_language', language_handler)
-    chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
+    # start_handler = CommandHandler('start', start)
+    # language_handler_ = CommandHandler('set_language', language_handler)
+    # chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
     
-    application.add_handler(start_handler)
-    application.add_handler(language_handler_)
-    application.add_handler(chosen_language)
+    # application.add_handler(start_handler)
+    # application.add_handler(language_handler_)
+    # application.add_handler(chosen_language)
     
-    # application.add_handler(otp_handler)
-    application.add_handler(
-        MessageHandler(
-            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
-            response_handler
-        )
-    )
+    # # application.add_handler(otp_handler)
+    # application.add_handler(
+    #     MessageHandler(
+    #         (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
+    #         response_handler
+    #     )
+    # )
     
     # Add conversation handlers for language selection and full details
-    conv_handler_1 = ConversationHandler(
-    entry_points=[CommandHandler('start', start)],
+    conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('start', keyboard_start)],
     states={
-        GENDER: [MessageHandler(filters.Regex('^(Male|Female)$'), gender)],
-        MARITAL_STATUS: [MessageHandler(filters.Regex('^(Married|Unmarried)$'), marital_status)],
+        GENDER: [MessageHandler(filters.Regex('^(Male|Female|Other)$'), gender)],
+        MARITAL_STATUS: [MessageHandler(filters.Regex('^(Married|Divorced|Single|Widowed|Others)$'), marital_status)],
     },
         fallbacks=[CommandHandler('cancel', cancel)],
-    )
+    )   
 
-    application.add_handler(conv_handler_1)
+    application.add_handler(conv_handler)
+
+    # conv_handler_2 = ConversationHandler(
+    #     entry_points=[CommandHandler('full_details', start_full_details)],
+    #     states={
+    #         RELIGION: [CallbackQueryHandler(religion_callback)],
+    #         CASTE: [CallbackQueryHandler(caste_callback)],
+    #         RATION_CARD: [CallbackQueryHandler(ration_card_callback)],
+    #         LAND_OWNERSHIP: [CallbackQueryHandler(land_ownership_callback)],
+    #         OCCUPATIONAL_STATUS: [CallbackQueryHandler(occupational_status_callback)],
+    #         MONTHLY_INCOME: [MessageHandler(filters.TEXT & ~filters.COMMAND, monthly_income)],
+    #     },
+    #     fallbacks=[],
+    # )
     
-    conv_handler_2 = ConversationHandler(
-        entry_points=[CommandHandler('full_details', start_full_details)],
-        states={
-            RELIGION: [CallbackQueryHandler(religion_callback)],
-            CASTE: [CallbackQueryHandler(caste_callback)],
-            RATION_CARD: [CallbackQueryHandler(ration_card_callback)],
-            LAND_OWNERSHIP: [CallbackQueryHandler(land_ownership_callback)],
-            OCCUPATIONAL_STATUS: [CallbackQueryHandler(occupational_status_callback)],
-            MONTHLY_INCOME: [MessageHandler(filters.TEXT & ~filters.COMMAND, monthly_income)],
-        },
-        fallbacks=[],
-    )
-    
-    application.add_handler(conv_handler_2)
+    # application.add_handler(conv_handler_2)
     # otp_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler)
     # otpv_handler = MessageHandler((filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), OTP_handler_1)
     
     application.run_polling()
 
+
+
+# async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, photo):
+    
+#     assistant_message = ""
+#     chat_id = update.effective_chat.id
+#     lang = context.user_data.get('lang')
+    
+#     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_image_file:
+#         await photo.download_to_drive(custom_path=temp_image_file.name)
+#         chat_id = update.effective_chat.id
+
+#         wait_message = get_random_wait_messages(
+#                 not_always=True,
+#                 lang=lang
+#         )
+#         if wait_message:
+#             await context.bot.send_message(chat_id=chat_id, text=wait_message)
+
+#         with open(temp_image_file.name, "rb") as file: # Open the image file in binary mode
+#             photo_data = file.read()
+#             text = process_image(chat_id, photo_data) # file
+#             print(f"text is {text}")
+#             text_1 = parse_photo_text(text)
+#             assistant_message, history = chat(chat_id, text_1)
+#             print(f"assistant_message is {assistant_message}")
+#             print(type(assistant_message))
+#             # response_photo, assistant_message, history = parse_photo_text(
+#             #     chat_id, photo_file=open(temp_image_file.name, "rb")
+#             # )
+#             # response_photo.stream_to_file(temp_image_file.name)
+#             #duration = get_duration_pydub(temp_image_file.name)
+#             # await context.bot.send_photo(
+#             #     chat_id=chat_id, 
+#             #     #photo=open(temp_image_file.name, "rb"), 
+#             #     filename="response.jpg",
+#             #     performer="Yojana Didi",
+#             # )
+#             await context.bot.send_message(
+#                 chat_id=chat_id, text=assistant_message # try adding [0] if it doesn't work
+#             )
+#             file.close()
