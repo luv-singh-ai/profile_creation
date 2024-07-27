@@ -18,7 +18,9 @@ def get_redis_value(key):
     # value = redis_client.get(key)
     # if value is not None:
     #     return value.decode('utf-8')
-    return redis_client.get(key)
+    item = redis_client.get(key)
+    value = item.decode('utf-8') if isinstance(item, bytes) else item
+    return value
 
 def set_redis(key, value, expire=600):
     # Setting key-value pairs with an expiry time of 10 minutes

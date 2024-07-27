@@ -8,7 +8,7 @@ from telegram.ext import (
     ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler,
     filters, CallbackContext, CallbackQueryHandler, ConversationHandler
 )
-from core.ai import chat, audio_chat, bhashini_text_chat, bhashini_audio_chat
+from core.ai_new import chat, audio_chat, bhashini_text_chat, bhashini_audio_chat, process_profile, process_user_details
 from utils.redis_utils import set_redis, get_redis_value, delete_redis
 from utils.openai_utils import get_duration_pydub, get_random_wait_messages
 import dotenv
@@ -36,8 +36,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         text="Hello, I am Yojana Didi. Please share your details with me."
     )
     try:
+        # Reset conversation state
+        set_redis('conversation_complete', "False")
+        set_redis('otp_verified', "False")
         context.user_data.clear()
-        keys_to_delete = ['otp_verified', 'thread_id', 'chat_id', 'PID', 'number','conversation_complete', 'keyboard_details']
+        
+        keys_to_delete = ['thread_id', 'chat_id', 'PID', 'number', 'keyboard_details']
         for key in keys_to_delete:
             delete_redis(key)
     except Exception as e:
@@ -85,26 +89,13 @@ async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         return CHAT
 
     # Check if the conversation is complete
-    item = get_redis_value('conversation_complete')
-    conversation_complete =  item.decode('utf-8') if isinstance(item, bytes) else item
+    conversation_complete = get_redis_value('conversation_complete')
     print("conversation_complete data is :", conversation_complete)
     
     if conversation_complete == "True":
         # Reset the conversation_complete flag
         # set_redis('conversation_complete', "False")
-        
-        lang = context.user_data.get('lang', 'en')
-        messages = {
-            "en": "Please select your gender:",
-            "hi": "कृपया अपना लिंग चुनें:",
-            "mr": "कृपया तुमचे लिंग निवडा:"
-        }
-        gender_keyboard = [['Male', 'Female', 'Other']]
-        await update.message.reply_text(
-            messages.get(lang, messages["en"]),
-            reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
-        )
-        return GENDER
+        return await gender_handler(update, context)
     else:
         return CHAT
 
@@ -123,6 +114,11 @@ async def text_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, 
         if response:
             await context.bot.send_message(chat_id=chat_id, text=response)
         await context.bot.send_message(chat_id=chat_id, text=response_en)
+    
+    # Check if OTP is verified and DOB is provided
+   # Check if all required information is collected
+    if history['status'] == 'completed':
+        set_redis('conversation_complete', "True")
     
     return response_en, history
 
@@ -157,42 +153,69 @@ async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE,
                 filename="response.wav" if lang == 'en' else "response.mp3",
                 performer="Yojana Didi",
             )
+            if history['status'] == 'completed':
+                set_redis('conversation_complete', "True")
             await context.bot.send_message(
                 chat_id=chat_id, 
                 text=assistant_message if lang == 'en' else response
             )
 
-async def gender_handler(update: Update, context: CallbackContext) -> int:
-    gender_dict = {"Male": "M", "Female": "F", "Other": "O"}
-    keyboard_details['gender'] = gender_dict.get(update.message.text)
-    
+async def gender_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     lang = context.user_data.get('lang', 'en')
     messages = {
-        "en": "Thank you. Now, please select your marital status:",
-        "hi": "धन्यवाद। अब, कृपया अपनी वैवाहिक स्थिति चुनें:",
-        "mr": "धन्यवाद. आता, कृपया तुमची वैवाहिक स्थिती निवडा:"
+        "en": "Please select your gender:",
+        "hi": "कृपया अपना लिंग चुनें:",
+        "mr": "कृपया तुमचे लिंग निवडा:"
     }
+    gender_keyboard = [['Male', 'Female', 'Other']]
+    await update.message.reply_text(
+        messages.get(lang, messages["en"]),
+        reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
+    )
+    return GENDER
+
+async def gender_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    gender = update.message.text
+    context.user_data['gender'] = gender
+    return await marital_status_handler(update, context)
+
+async def marital_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    lang = context.user_data.get('lang', 'en')
+    messages = {
+        "en": "Please select your marital status:",
+        "hi": "कृपया अपनी वैवाहिक स्थिति चुनें:",
+        "mr": "कृपया तुमची वैवाहिक स्थिती निवडा:"
+    }
+    marital_status_keyboard = [['Single', 'Married', 'Divorced', 'Widowed']]
     await update.message.reply_text(
         messages.get(lang, messages["en"]),
         reply_markup=ReplyKeyboardMarkup(marital_status_keyboard, one_time_keyboard=True)
     )
     return MARITAL_STATUS
 
-async def marital_status_handler(update: Update, context: CallbackContext) -> int:
-    keyboard_details['marital_status'] = update.message.text
-    lang = context.user_data.get('lang', 'en')
-    messages = {
-        "en": f"Thank you for providing your information!\n\n",
-        "hi": f"जानकारी प्रदान करने के लिए धन्यवाद!\n\n",
-        "mr": f"माहिती प्रदान केल्याबद्दल धन्यवाद!\n\n"
-    }
-    await update.message.reply_text(
-        messages.get(lang, messages["en"]),
-        reply_markup=ReplyKeyboardRemove()
-    )
+async def marital_status_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    marital_status = update.message.text
+    context.user_data['marital_status'] = marital_status
     
-    # Store keyboard_details in Redis
-    set_redis("keyboard_details", json.dumps(keyboard_details))
+    # Now we have all the information, let's create the profile
+    chat_id = update.effective_chat.id
+    user_details = json.loads(get_redis_value(f'user_details_{chat_id}') or '{}')
+    
+    parameters = {
+        'firstName': user_details.get('firstName', ''),
+        'lastName': user_details.get('lastName', ''),
+        'mobile': user_details.get('mobile', ''),
+        'dob': user_details.get('dob', ''),
+        'gender': context.user_data['gender'],
+        'maritalStatus': context.user_data['marital_status']
+    }
+    
+    person_id = process_profile(parameters)
+    
+    if person_id:
+        await update.message.reply_text(f"Profile created successfully! Your Person ID is {person_id}", reply_markup=ReplyKeyboardRemove())
+    else:
+        await update.message.reply_text("There was an error creating your profile. Please try again.", reply_markup=ReplyKeyboardRemove())
     
     return ConversationHandler.END
 
@@ -202,7 +225,6 @@ async def cancel(update: Update, context: CallbackContext) -> int:
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
-
 def main():
     application = ApplicationBuilder().token(token).read_timeout(30).write_timeout(30).build()
     
