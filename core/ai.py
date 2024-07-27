@@ -4,6 +4,7 @@ from openai import OpenAI
 import numpy as np
 # import cv2
 # import pytesseract
+
 from utils.profile import (
     generate_otp, 
     verify_otp
@@ -70,6 +71,10 @@ except Exception as e:
     assistant = create_assistant(client, assistant_id)
     assistant_id = assistant.id
 
+# assistant_id = ""
+# assistant = create_assistant(client, assistant_id)
+# assistant_id = assistant.id
+
 def get_metadata(chat_id):
     """
     Get thread_id, run_id and status from redis
@@ -120,13 +125,14 @@ def gather_user_details(input_message, history, assistant_id):
     status = history.get("status")
     print(thread_id, input_message, assistant_id)
     run_id, status = upload_message(client, thread_id, input_message, assistant_id)
-    # ValueError: Expected a non-empty value for `thread_id` but received None
+    
     print("run.status is", status)
     run_id, status = get_run_status(client, thread_id, run_id)
     print(f"input message is {input_message}")
     print(f"run status is {status}")
     if status == "completed":
         assistant_message = get_assistant_message(client, thread_id)
+        set_redis('conversation_complete', "True")
     else:
         assistant_message = "something went wrong please check the openAI API"
         # call the function
@@ -145,16 +151,28 @@ def process_profile(parameters, tool_id, thread_id, run_id):
     """
     Creates the citizen profile and get the person_id when the action required is profile_creation
     """
-    otp_verified = get_redis_value("otp_verified")
-    # otp_check = False
-    if otp_verified != "true":
-        error = "OTP not verified. Please verify OTP before creating profile."
-        history = {
-            "thread_id": thread_id,
-            "run_id": run_id,
-            "status": "failed",
-        }
-        return error, history
+    
+    try:
+        otp_verified = get_redis_value("otp_verified")
+        # otp_check = False
+        if otp_verified != "true":
+            error = "OTP not verified. Please verify OTP before creating profile."
+            history = {
+                "thread_id": thread_id,
+                "run_id": run_id,
+                "status": "failed",
+            }
+            return error, history
+    except Exception as e:
+        print(e)
+         
+    try:
+        add_1 = get_redis_value("keyboard_details")
+        keyboard_details_1 = json.loads(add_1)
+        parameters.update(keyboard_details_1)
+        print(parameters)
+    except Exception as e:
+        print(e)
     
     id = profile_creation(parameters) # id is int
     set_redis("PID", id)
@@ -403,10 +421,10 @@ def process_function_calls(tools_to_call, thread_id, run_id):
             assistant_message, history = process_profile(
                 parameters, tool.id, thread_id, run_id
             )
-        elif func_name == "get_full_details":
-            assistant_message, history = process_full_details(
-                parameters, tool.id, thread_id, run_id
-            )
+        # elif func_name == "get_full_details":
+        #     assistant_message, history = process_full_details(
+        #         parameters, tool.id, thread_id, run_id
+        #     )
         elif func_name == "get_OTP":
             assistant_message, history = process_OTP(
             parameters, tool.id, thread_id, run_id
@@ -454,7 +472,7 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
     """
     Main chat logic using OpenAI assistant API and function calling API
     """
-    set_redis("otp_verified", "false")  # Reset OTP verification status
+    # set_redis("otp_verified", "false")  # Reset OTP verification status
     # setting default assistant_message
     assistant_message = "Something went wrong. Please try again later."    
     history = get_metadata(chat_id)
@@ -492,6 +510,7 @@ def chat(chat_id, input_message, client=client, assistant_id=assistant_id):
             "run_id": run_id,
             "status": status,
         }
+        # we can add set_redis(conversation_complete = True) here
         print("history is \n", history)
     if status == "requires_action":
         tools_to_call, run_id, status = get_tools_to_call( # s2

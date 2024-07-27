@@ -86,7 +86,7 @@ def verify_otp(text):
         return None # when there is no OTP in text
     
     otp = match.group()  # Extracted OTP
-    print(otp)
+    print("submitted otp is ", otp)
     
     url = "https://testapi.haqdarshak.com/api/verify_otp"
     token = generate_token()
@@ -107,12 +107,12 @@ def verify_otp(text):
         print(response.text)
         answer = json.loads(response.text)
         if answer.get("message") == "Success": # {"status": 200, "message": "Success"}
-            # set_redis("otp_verified", "true")  #  OTP verification status
+            set_redis("otp_verified", "true")  #  OTP verification status
             return True
         else:
             # {"status": 200, "message": "Invalid OTP"}
             print("Invalid OTP")
-            # set_redis('otp_verified', False)
+            set_redis('otp_verified', False)
             return False
     except requests.RequestException as e:
         print(f"Error: {e}")

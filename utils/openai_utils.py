@@ -14,7 +14,7 @@ load_dotenv(
 # with open("prompts/prompt.txt", "r") as file:
 #     main_prompt = file.read().replace('\n', ' ')
 
-with open("prompts/prompt_v2.txt", "r") as file:
+with open("prompts/prompt_v3.txt", "r") as file: # original prompt_v2 version
     main_prompt = file.read().replace('\n', ' ')
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -209,12 +209,12 @@ def create_assistant(client, assistant_id):
         tools=[
                 {
                     "type": "function",
-                    "function": get_user_details # function_call = {'name': 'get_user_details'},
+                    "function": get_user_details
                 },
-                {
-                    "type": "function",
-                    "function": get_full_details # function_call = {'name': 'get_full_details'},
-                },
+                # {
+                #     "type": "function",
+                #     "function": get_full_details
+                # },
                 {
                     "type":"function",
                     "function": get_OTP # function_call = {'name': 'get_OTP'},
@@ -231,6 +231,40 @@ def create_assistant(client, assistant_id):
         )
         set_redis("assistant_id", assistant.id)
         return assistant
+
+# using new assistant
+# def create_assistant(client, assistant_id):
+#     assistant = client.beta.assistants.create(
+#     name="AI Assistant",
+#     instructions=main_prompt,
+#     model=model_name,
+#     tools=[
+#             {
+#                 "type": "function",
+#                 "function": get_user_details # function_call = {'name': 'get_user_details'},
+#             },
+#             # {
+#             #     "type": "function",
+#             #     "function": get_full_details # function_call = {'name': 'get_full_details'},
+#             # },
+#             {
+#                 "type":"function",
+#                 "function": get_OTP # function_call = {'name': 'get_OTP'},
+#             },
+#             {
+#                 "type":"function",
+#                 "function": verify_OTP # function_call = {'name': 'verify_OTP'},
+#             }
+#             # {
+#             #     "type": "retrieval",
+#             #      instructions="You are a customer support chatbot. Use your knowledge base to best respond to customer queries.",
+#             # }
+#         ]
+#     )
+#     set_redis("assistant_id", assistant.id)
+#     print(f"assistant id is {assistant.id}")
+#     return assistant
+
 
 def create_thread(client):
     thread = client.beta.threads.create()
@@ -327,8 +361,6 @@ def get_random_wait_messages(not_always=False, lang="en"):
     messages = [
         "Please wait",
         "I am processing your request",
-        "Hold on",
-        "I am on it",
         "I am working on it",
     ]
     if not_always:
@@ -381,70 +413,3 @@ def run_with_streaming_responses(client, thread_id, assistant_id):
     ) as stream:
         stream.until_done()
 '''
-# raise_complaint ={
-#     "name": "raise_complaint",
-#     "description": "Raise complaint",
-#     "parameters": {
-#         "type": "object",
-#         "properties": {
-#             "description": {
-#                 "type": "string",
-#                 "description": "Detailed description of complaint"
-#             },
-#             "service_code": {
-#                 "type": "string",
-#                 "description": "service code of complaint extracted from description",
-#                 "enum": [
-#                     "GarbageNeedsTobeCleared", "NoStreetLight", "StreetLightNotWorking",
-#                     "BurningOfGarbage", "OverflowingOrBlockedDrain", "illegalDischargeOfSewage",
-#                     "BlockOrOverflowingSewage", "ShortageOfWater", "DirtyWaterSupply", "BrokenWaterPipeOrLeakage",
-#                     "WaterPressureisVeryLess", "HowToPayPT", "WrongCalculationPT", "ReceiptNotGenerated",
-#                     "DamagedRoad", "WaterLoggedRoad", "ManholeCoverMissingOrDamaged", "DamagedOrBlockedFootpath",
-#                     "ConstructionMaterialLyingOntheRoad", "RequestSprayingOrFoggingOperation", "StrayAnimals", "DeadAnimals",
-#                     "DirtyOrSmellyPublicToilets", "PublicToiletIsDamaged", "NoWaterOrElectricityinPublicToilet", "IllegalShopsOnFootPath",
-#                     "IllegalConstructions", "IllegalParking"
-#                 ]
-#             },
-#             "auth_token": {
-#                 "type": "string",
-#                 "description": "Authentication token of user"
-#             },
-#             "city": {
-#                 "type": "string",
-#                 "description": "City of the complaint"
-#             },
-#             "state": {
-#                 "type": "string",
-#                 "description": "State of the complaint"
-#             },
-#             "district": {
-#                 "type": "string",
-#                 "description": "district of the complaint"
-#             },
-#             "region": {
-#                 "type": "string",
-#                 "description": "region of the complaint"
-#             },
-#             "locality": {
-#                 "type": "string",
-#                 "description": "locality of the complaint"
-#             },
-#             "name": {
-#                 "type": "string",
-#                 "description": "name of the user"
-#             },
-#             "mobile_number": {
-#                 "type": "string",
-#                 "description": "mobile number of the user"
-#             },
-#         },
-#         "required": [
-#             "description",
-#             "service_code",
-#             "locality",
-#             "city",
-#             "name",
-#             "mobile_number"
-#         ]
-#     },
-# }

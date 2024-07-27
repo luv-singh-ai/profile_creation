@@ -79,7 +79,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     try:
         context.user_data.clear()
-        keys_to_delete = ['otp_verified','thread_id', 'chat_id', 'PID','number'] # 'assistant_id'
+        keys_to_delete = ['otp_verified','thread_id', 'chat_id', 'PID','number', 'keyboard_details_1'] # 'assistant_id'
         # Delete the specified keys
         for key in keys_to_delete:
             delete_redis(key)
@@ -162,41 +162,6 @@ async def query_handler(update: Update, context: CallbackContext):
     #     photo = await context.bot.get_file(update.message.photo[-1].file_id) # update.message.photo[0].file_id
     #     await photo_handler(update, context, photo)
 
-### keyboard options
-# Define states
-GENDER, MARITAL_STATUS= range(2)
-gender_keyboard = [['Male', 'Female', 'Other']] # ["M", "F", "O"], # M for Male, F for Female, O for Other
-marital_status_keyboard = [['Married', 'Divorced','Single', 'Widowed', 'Others']] # ["Single", "Married", "Divorced", "Widowed", "Others"]
-
-async def keyboard_start(update: Update, context):
-    await update.message.reply_text(
-        "Welcome! Please select your gender: ",
-        reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
-    )
-    return GENDER
-
-async def gender(update: Update, context):
-    context.user_data['gender'] = update.message.text
-    await update.message.reply_text(
-        "Thank you. Now, please select your marital status:",
-        reply_markup=ReplyKeyboardMarkup(marital_status_keyboard, one_time_keyboard=True)
-    )
-    return MARITAL_STATUS
-
-async def marital_status(update: Update, context):
-    context.user_data['marital_status'] = update.message.text
-    await update.message.reply_text(
-        f"Thank you for providing your information!\n\n"
-        # later comment these two lines
-        f"Gender: {context.user_data['gender']}\n"
-        f"Marital Status: {context.user_data['marital_status']}"
-    )
-    return ConversationHandler.END
-
-async def cancel(update: Update, context):
-    await update.message.reply_text("Operation cancelled. To start again, use the /start command.")
-    return ConversationHandler.END
-
 async def chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
     response = ""
     chat_id = update.effective_chat.id
@@ -241,7 +206,7 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                 response_audio, assistant_message, history = audio_chat(
                     chat_id, audio_file=open(temp_audio_file.name, "rb")
                 )
-                response_audio.stream_to_file(temp_audio_file.name)
+                response_audio.stream_to_file(temp_audio_file.name) # use .with_streaming_response.method()
                 # fix this error "raise JSONDecodeError("Expecting value", s, err.value) from None" here
                 # duration = get_duration_pydub(temp_audio_file.name)
                 await context.bot.send_audio(
@@ -291,6 +256,46 @@ async def talk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice
                     chat_id=chat_id, text=response
                 )
                 file_.close()
+
+### keyboard options
+# Define states
+GENDER, MARITAL_STATUS= range(2)
+gender_keyboard = [['Male', 'Female', 'Other']] # ["M", "F", "O"], # M for Male, F for Female, O for Other
+marital_status_keyboard = [['Married', 'Divorced','Single', 'Widowed', 'Others']] # ["Single", "Married", "Divorced", "Widowed", "Others"]
+keyboard_details_1 = {}
+
+async def keyboard_start(update: Update, context):
+    await update.message.reply_text(
+        "Welcome! Please select your gender: ",
+        reply_markup=ReplyKeyboardMarkup(gender_keyboard, one_time_keyboard=True)
+    )
+    return GENDER
+
+async def gender(update: Update, context):
+    # context.user_data['gender'] = update.message.text
+    dict_1 = {"Male": "M", "Female":"F", "Other": "O"}
+    keyboard_details_1['gender'] = dict_1.get(update.message.text)
+    await update.message.reply_text(
+        "Thank you. Now, please select your marital status:",
+        reply_markup=ReplyKeyboardMarkup(marital_status_keyboard, one_time_keyboard=True)
+    )
+    return MARITAL_STATUS
+
+async def marital_status(update: Update, context):
+    # context.user_data['marital_status'] = update.message.text
+    keyboard_details_1['marital_status'] = update.message.text
+    await update.message.reply_text(
+        f"Thank you for providing your information!\n\n"
+        # later comment these two lines
+        f"Gender: {keyboard_details_1['gender']}\n"
+        f"Marital Status: {keyboard_details_1['marital_status']}"
+    )
+    set_redis("keyboard_details_1", keyboard_details_1)
+    return ConversationHandler.END
+
+async def cancel(update: Update, context):
+    await update.message.reply_text("Operation cancelled. To start again, use the /start command.")
+    return ConversationHandler.END
 
 # NEW CODE
 # from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -400,26 +405,25 @@ user_responses = {}
 
 # # Add this to your main() function
 
-
 if __name__ == '__main__':
     application = ApplicationBuilder().token(
         token
     ).read_timeout(30).write_timeout(30).build()
-    # start_handler = CommandHandler('start', start)
-    # language_handler_ = CommandHandler('set_language', language_handler)
-    # chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
+    start_handler = CommandHandler('start', start)
+    language_handler_ = CommandHandler('set_language', language_handler)
+    chosen_language = CallbackQueryHandler(preferred_language_callback, pattern='[1-3]')
     
-    # application.add_handler(start_handler)
-    # application.add_handler(language_handler_)
-    # application.add_handler(chosen_language)
+    application.add_handler(start_handler)
+    application.add_handler(language_handler_)
+    application.add_handler(chosen_language)
     
-    # # application.add_handler(otp_handler)
-    # application.add_handler(
-    #     MessageHandler(
-    #         (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
-    #         response_handler
-    #     )
-    # )
+    # application.add_handler(otp_handler)
+    application.add_handler(
+        MessageHandler(
+            (filters.TEXT & (~filters.COMMAND)) | (filters.VOICE & (~filters.COMMAND)), 
+            response_handler
+        )
+    )
     
     # Add conversation handlers for language selection and full details
     conv_handler = ConversationHandler(
