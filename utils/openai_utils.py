@@ -49,7 +49,7 @@ get_user_details = {
             },
             "dob": {
                 "type": "string",
-                "description": "Date of Birth of Person. Format is DD-MM-YYYY"
+                "description": "Date of Birth of Person. Format is YYYY-MM-DD"
             }
         },
         "required": ["firstName", "lastName", "mobile", "dob"]

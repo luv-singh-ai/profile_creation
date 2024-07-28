@@ -35,8 +35,8 @@ class User(BaseModel):
     firstName: str = Field(..., min_length=1)
     lastName: str = Field(..., min_length=1)
     mobile: str
-    gender: Literal["Male", "Female", "Other"]
-    maritalStatus: Literal["Single", "Married", "Divorced", "Widowed"]
+    gender: Literal["M", "F", "O"]
+    maritalStatus: Literal["Single", "Married", "Divorced", "Widowed", "Others"]
     dob: str
 
     @field_validator('mobile')
@@ -47,9 +47,19 @@ class User(BaseModel):
 
     @field_validator('dob')
     def validate_dob(cls, v: str) -> str:
-        if v >= date.today():
-            raise ValueError('Date of birth cannot be in the future')
-        return v
+        try:
+            # Parse the input string to a date object
+            dob_date = datetime.strptime(v, "%Y-%m-%d").date()
+            
+            # Compare with today's date
+            if dob_date >= date.today():
+                raise ValueError('Date of birth cannot be in the future')
+            
+            # If all checks pass, return the original string
+            return v
+        except ValueError as e:
+            # This will catch both parsing errors and our custom future date error
+            raise ValueError(f"Invalid date of birth: {str(e)}")
 
 # # Rate limiting constants
 # MAX_OTP_REQUESTS = 5
@@ -60,7 +70,7 @@ class User(BaseModel):
 # Define keyboard layouts
 LANGUAGE_KEYBOARD = [['English', 'हिंदी', 'मराठी']]
 GENDER_KEYBOARD = [['Male', 'Female', 'Other']]
-MARITAL_STATUS_KEYBOARD = [['Single', 'Married', 'Divorced', 'Widowed']]
+MARITAL_STATUS_KEYBOARD = [['Single', 'Married', 'Divorced', 'Widowed', 'Others']]
 
 MESSAGES = {
     'en': {
