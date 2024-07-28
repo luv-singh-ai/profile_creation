@@ -7,7 +7,9 @@ import numpy as np
 
 from utils.profile import (
     generate_otp, 
-    verify_otp
+    verify_otp,
+    profile_creation,
+    mini_screening
     )
 from utils.openai_utils import (
     create_run,
@@ -30,11 +32,6 @@ from utils.bhashini_utils import (
     bhashini_translate,
     bhashini_asr,
     bhashini_tts
-)
-
-from utils.profile import (
-    profile_creation,
-    mini_screening
 )
 
 import os

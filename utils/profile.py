@@ -1,32 +1,13 @@
 import requests
 import json
 import re
-from datetime import date
-from pydantic import BaseModel, Field, validator
+# from datetime import date
 from typing import Literal
 
-from utils.redis_utils import (
-    get_redis_value,
-    set_redis,
-)
-# Define a Pydantic model for user data
-class User(BaseModel):
-    firstName: str = Field(..., min_length=1)
-    lastName: str = Field(..., min_length=1)
-    mobile: str 
-    gender: str # Literal["male", "female", "other"] = Field(...)
-    maritalStatus: str # Literal["single", "married", "divorced", "widowed"] = Field(...)
-    dob: date = Field(...)
-    # state: int
-    # district: int 
-    @validator('dob', pre=True)
-    def parse_dob(cls, value):
-        if isinstance(value, str):
-            try:
-                return date.fromisoformat(value)
-            except ValueError:
-                raise ValueError(f"Invalid date format for dob: {value}")
-        return value
+# from utils.redis_utils import (
+#     get_redis_value,
+#     set_redis,
+# )
 
 def generate_token():
 
@@ -47,14 +28,15 @@ def generate_token():
     token = token_res.get("token")
     return token
 
-def generate_otp(text):
+def generate_otp(num):
+    return True
     # extract 10 digit mobile number from text and send OTP
-    match = re.search(r'(\+91[-\s]?|0)?(\d{10})\b', text) # re.sub(pattern, text)
+    # match = re.search(r'(\+91[-\s]?|0)?(\d{10})\b', text) # re.sub(pattern, text)
     
-    if not match:
-        return None # when there is no mobile number in text
+    # if not match:
+    #     return None # when there is no mobile number in text
     
-    num =  match.group(2)
+    # num =  match.group(2)
     # print(type(num))
     
     url = "https://testapi.haqdarshak.com/api/send_otp"
@@ -71,13 +53,14 @@ def generate_otp(text):
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()  # Raise an error for bad status codes
         print(response.text)
-        set_redis("number", str(num)) # Redis can only store strings
+        # set_redis("number", str(num)) # Redis can only store strings
         return True
     except requests.RequestException as e:
         print(f"Error: {e}")
         return None
 
-def verify_otp(text):
+def verify_otp(text, num):
+    return True
     # extract 6 digit OTP
     # text = json.dumps(text) if text is JSON file 
     match = re.search(r'\b\d{6}\b', text)
@@ -94,7 +77,7 @@ def verify_otp(text):
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token}'
     }
-    num = get_redis_value("number").decode('utf-8') # Use decode('utf-8') to convert the byte string back to a regular string.
+    # num = get_redis_value("number").decode('utf-8') # Use decode('utf-8') to convert the byte string back to a regular string.
     
     print("Number is", num)
     payload = json.dumps({
@@ -107,12 +90,10 @@ def verify_otp(text):
         print(response.text)
         answer = json.loads(response.text)
         if answer.get("message") == "Success": # {"status": 200, "message": "Success"}
-            set_redis("otp_verified", "true")  #  OTP verification status
             return True
         else:
             # {"status": 200, "message": "Invalid OTP"}
             print("Invalid OTP")
-            set_redis('otp_verified', False)
             return False
     except requests.RequestException as e:
         print(f"Error: {e}")
@@ -128,7 +109,6 @@ def profile_creation(parameters: dict) -> int:
     location_details = {"state": 27, "district": 468, "livingType": "urban", "ulb": 251323, "ward": 65537, "pincode": "422603"}
     parameters.update(location_details)
     print(parameters)
-
    
     try:
         payload = json.dumps(parameters)

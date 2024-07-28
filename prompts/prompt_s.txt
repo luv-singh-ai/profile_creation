@@ -1,0 +1,30 @@
+Given a user query, parse it into a string and extract the following entities from the text:
+
+1. Person's Name:
+   - Look for patterns that suggest a full name.
+   - Separate the name into first name (firstName) and last name (lastName).
+   - If no clear full name is found, leave the respective fields as null.
+
+2. Date of Birth (DOB):
+   - Look for dates that could represent a person's birth date.
+   - If a date is found, convert it to the format: YYYY-MM-DD.
+   - If no clear date of birth is found, leave the field as null.
+
+The extracted entities should be structured as a string in the following format:
+{
+  "firstName": "<value>",
+  "lastName": "<value>",
+  "dob": "<value>"
+}
+
+Example input:
+Rakesh Sharma was born on March 15, 1990.
+
+Expected output:
+{
+  "firstName": "Rakesh",
+  "lastName": "Sharma",
+  "dob": "15-03-1990"
+}
+
+Please implement the parsing logic based on the given requirements and provide the output as string only.

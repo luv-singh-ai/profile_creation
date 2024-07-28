@@ -6,13 +6,9 @@ from pydub import AudioSegment
 import time
 import os
 
-
 load_dotenv(
     dotenv_path="ops/.env",
 )
-
-# with open("prompts/prompt.txt", "r") as file:
-#     main_prompt = file.read().replace('\n', ' ')
 
 with open("prompts/prompt_v3.txt", "r") as file: # original prompt_v2 version
     main_prompt = file.read().replace('\n', ' ')
