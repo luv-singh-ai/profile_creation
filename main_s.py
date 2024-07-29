@@ -88,14 +88,14 @@ MESSAGES = {
         'parse_error': "I couldn't understand that. Please provide your full name and date of birth.",
         'select_gender': "Thank you. Now, please select your gender:",
         'select_marital': "Please select your marital status:",
-        'profile_created': "Thank you for providing your information!\n\nName: {firstName} {lastName}\nDate of Birth: {dob}\nGender: {gender}\nMarital Status: {maritalStatus}\nPerson ID: {person_id}",
+        'profile_created': "Thank you for providing your information!\n\nName: {firstName} {lastName}\nDate of Birth: {dob}\nGender: {gender}\nMarital Status: {maritalStatus}\n", #Person ID: {person_id}
         'profile_failed': "Failed to create citizen profile. Please try again later.",
         'invalid_data': "Invalid data: {}. Please start over.",
         'cancelled': "Operation cancelled. To start again, use the /start command.",
-        'msg' : 'Thank you for sharing your name and DOB'
+        'msg' : 'Thank you for sharing your name and date of birth'
     },
     'hi': {
-        'welcome': "नमस्ते, मैं योजना दीदी हूँ। कृपया अपनी जानकारी साझा करें।",
+        'welcome': "नमस्ते, मैं योजना दीदी हूँ। कृपया अपनी जानकारी बताएँ।",
         'choose_language': "भाषा चुनें:",
         'provide_mobile': "आपने हिंदी चुनी है। कृपया अपना मोबाइल नंबर प्रदान करें।",
         'invalid_mobile': "कृपया 10-अंकों का मान्य मोबाइल नंबर दर्ज करें।",
@@ -112,7 +112,8 @@ MESSAGES = {
         'profile_created': "जानकारी देने के लिए धन्यवाद!\n\nनाम: {firstName} {lastName}\nजन्म तिथि: {dob}\nलिंग: {gender}\nवैवाहिक स्थिति: {maritalStatus}\nव्यक्ति आईडी: {person_id}",
         'profile_failed': "नागरिक प्रोफ़ाइल बनाने में विफल रहा। कृपया बाद में पुनः प्रयास करें।",
         'invalid_data': "अमान्य डेटा: {}. कृपया पुनः प्रारंभ करें।",
-        'cancelled': "ऑपरेशन रद्द कर दिया गया। फिर से शुरू करने के लिए, /start कमांड का उपयोग करें।"
+        'cancelled': "ऑपरेशन रद्द कर दिया गया। फिर से शुरू करने के लिए, /start कमांड का उपयोग करें।",
+        'msg' : 'अपना नाम और जन्मतिथि बताने के लिए धन्यवाद'
     },
     'mr': {
         'welcome': "नमस्कार, मी योजना ताई आहे. कृपया आपली माहिती शेअर करा.",
@@ -132,7 +133,8 @@ MESSAGES = {
         'profile_created': "माहिती दिल्याबद्दल धन्यवाद!\n\nनाव: {firstName} {lastName}\nजन्मतारीख: {dob}\nलिंग: {gender}\nवैवाहिक स्थिती: {maritalStatus}\nव्यक्ती आयडी: {person_id}",
         'profile_failed': "नागरिक प्रोफाइल तयार करण्यात अयशस्वी. कृपया नंतर पुन्हा प्रयत्न करा.",
         'invalid_data': "अवैध डेटा: {}. कृपया पुन्हा प्रारंभ करा.",
-        'cancelled': "ऑपरेशन रद्द केले. पुन्हा सुरू करण्यासाठी, /start कमांड वापरा."
+        'cancelled': "ऑपरेशन रद्द केले. पुन्हा सुरू करण्यासाठी, /start कमांड वापरा.",
+        'msg' : 'तुमचे नाव आणि जन्मतारीख शेअर केल्याबद्दल धन्यवाद'
     }
 }
 
