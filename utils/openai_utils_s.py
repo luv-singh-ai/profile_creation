@@ -3,9 +3,10 @@ from dotenv import load_dotenv
 from utils.bhashini_utils import bhashini_translate
 from utils.redis_utils import set_redis
 import random
-from pydub import AudioSegment
+from pydub import AudioSegment # type: ignore
 import time
 import os
+import json
 
 from utils.bhashini_utils import (
     bhashini_translate,
@@ -24,32 +25,59 @@ client = OpenAI(
     api_key=openai_api_key,
 )
 
-def chat_completion(chat_id, text):
+# import anthropic
+
+# client = anthropic.Anthropic()
+
+# message = client.messages.create(
+#     model="claude-3-5-sonnet-20240620",
+#     max_tokens=1000,
+#     temperature=0,
+#     system="You are a world-class poet. Respond only with short poems.",
+#     messages=[
+#         {
+#             "role": "user",
+#             "content": [
+#                 {
+#                     "type": "text",
+#                     "text": "Why is the ocean salty?"
+#                 }
+#             ]
+#         }
+#     ]
+# )
+# print(message.content)
+
+def chat_completion(chat_id, text, track):
     '''
-    FINAL JSON SCHEMA
+    SAMPLE JSON SCHEMA
     {
         "firstName": <value>,
-        "lastName": <value>,
-        "dob": <value>,
+        "lastName": <value>
     }
     '''
-    with open("prompts/prompt_s.txt", "r") as file: # original prompt_v2 version
-        prompt = file.read().replace('\n', ' ')
+    if track == 1:
+        with open("prompts/prompt_s.txt", "r") as file:
+            prompt = file.read().replace('\n', ' ')
+    else:
+        with open("prompts/prompt_s1.txt", "r") as file:
+            prompt = file.read().replace('\n', ' ')
     
     completion = client.chat.completions.create(
         model=model_name,
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": text},
-        ], 
-        temperature=0.1,
-        # stream=True
-        # { "type": "json_object" } - to produce only json
+        ],
+        response_format={"type": "json_object"},
+        # temperature=0.1,
+        # stream=True 
     )
     # for chunk in completion:
     #     return chunk.choices[0].delta
     ans = completion.choices[0].message.content
     print("type is :", type(ans))
+    print(ans)
     return ans
 
 def audio_chat(chat_id, audio_file):
@@ -57,28 +85,31 @@ def audio_chat(chat_id, audio_file):
     Audio chat logic using OpenAI tts and stt
     """
     input_message = transcribe_audio(audio_file, client)
-    response, history =  chat_completion(chat_id, input_message)
+    response_json =  chat_completion(chat_id, input_message)
+    response = json.dumps(response_json)
     response_audio = generate_audio(response, client)
-    return response_audio, response, history
+    return response_audio, response
 
-def bhashini_text_chat(chat_id, text, lang): 
-    """
-    bhashini text chat logic
-    """
-    input_message = bhashini_translate(text, lang, "en")
-    response_en= chat_completion(chat_id, input_message)
-    response = bhashini_translate(response_en, "en", lang)
-    return response, response_en
+# def bhashini_text_chat(chat_id, text, lang): 
+#     """
+#     bhashini text chat logic
+#     """
+#     input_message = bhashini_translate(text, lang, "en")
+#     response_json= chat_completion(chat_id, input_message)
+#     response_en = json.loads(response_json)
+#     response = bhashini_translate(response_en, "en", lang)
+#     return response, response_en
 
-def bhashini_audio_chat(chat_id, audio_file, lang):
-    """
-    bhashini voice chat logic
-    """
-    input_message = bhashini_asr(audio_file, lang, "en")
-    response, history = chat_completion(chat_id, input_message)
-    response = bhashini_translate(response, "en", lang)
-    audio_content = bhashini_tts(response, lang)
-    return audio_content, response, history
+# def bhashini_audio_chat(chat_id, audio_file, lang):
+#     """
+#     bhashini voice chat logic
+#     """
+#     input_message = bhashini_asr(audio_file, lang, "en")
+#     response_json = chat_completion(chat_id, input_message)
+#     response = json.loads(response_json)
+#     response = bhashini_translate(response, "en", lang)
+#     audio_content = bhashini_tts(response, lang)
+#     return audio_content, response
 
 def transcribe_audio(audio_file, client):
     transcript = client.audio.transcriptions.create(
@@ -90,7 +121,7 @@ def transcribe_audio(audio_file, client):
 def generate_audio(text, client):
     response = client.audio.speech.create(
                 model="tts-1",
-                voice="alloy",
+                voice="nova", # original = alloy
                 input=text
             )
     return response

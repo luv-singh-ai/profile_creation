@@ -29,7 +29,7 @@ def generate_token():
     return token
 
 def generate_otp(num):
-    # return True
+    return True
     # extract 10 digit mobile number from text and send OTP
     # match = re.search(r'(\+91[-\s]?|0)?(\d{10})\b', text) # re.sub(pattern, text)
     
@@ -60,7 +60,7 @@ def generate_otp(num):
         return None
 
 def verify_otp(text, num):
-    # return True
+    return True
     # extract 6 digit OTP
     # text = json.dumps(text) if text is JSON file 
     match = re.search(r'\b\d{6}\b', text)
@@ -114,20 +114,20 @@ def profile_creation(parameters: dict) -> int:
         payload = json.dumps(parameters)
     except Exception as e:
         print(e)
-        # payload = json.dumps({
-        #     "firstName": "Shriram",
-        #     "lastName": "Kanawade",
-        #     "mobile": "7020922248",
-        #     "gender": "M",
-        #     "maritalStatus": "Married",
-        #     "dob": "1992-04-11",
-        #     "state": 27,
-        #     "district": 468,
-        #     "livingType": "urban",
-        #     "ulb": 251323,
-        #     "ward": 65537,
-        #     "pincode": "422603"
-        # })
+        payload = json.dumps({
+            "firstName": "Shriram",
+            "lastName": "Kanawade",
+            "mobile": "7020922248",
+            "gender": "M",
+            "maritalStatus": "Married",
+            "dob": "1992-04-11",
+            "state": 27,
+            "district": 468,
+            "livingType": "urban",
+            "ulb": 251323,
+            "ward": 65537,
+            "pincode": "422603"
+        })
     # crating new auth token 
     token = generate_token()
     headers = {

@@ -137,7 +137,7 @@ get_user_details = {
 #     ]
 #     },
 #     "Personal Monthly Income(CT000013)": {
-#     "type": "number",
+#     "type": "integer",
 #     "description": "Get the personal monthly income of the person. Enter the amount in local currency."
 #     },
 # mini screening questions 

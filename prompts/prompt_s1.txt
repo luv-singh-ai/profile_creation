@@ -1,0 +1,9 @@
+Given a user query, extract the Date of Birth (DOB) from the text and parse it as a JSON:
+1. Look for dates that could represent a person's birth date.
+2. If a date is found, convert it to the format: YYYY-MM-DD.
+3. If no clear date of birth is found, enter the value as 'None'
+
+The extracted entities should be structured as a JSON in the following format: {"dob": "<value>"}
+Example input: "I was born on March 15, 1990".
+Expected output: {"dob": "1990-03-15"}
+Output in the same language as input text. So if input is in Hindi or Marathi language, produce langauage of JSON should be the same.

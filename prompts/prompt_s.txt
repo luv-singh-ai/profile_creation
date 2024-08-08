@@ -1,30 +1,10 @@
-Given a user query, parse it into a string and extract the following entities from the text:
+Given a user query, extract the Person's Name from the text and parse it as a JSON:
+1. Look for patterns that suggest a full name.
+2. Separate the name into first name (firstName) and last name (lastName).
+3. If no clear full name is found, enter the value as 'None'
 
-1. Person's Name:
-   - Look for patterns that suggest a full name.
-   - Separate the name into first name (firstName) and last name (lastName).
-   - If no clear full name is found, leave the respective fields as null.
+The extracted entities should be structured as a JSON formatted string in the following format: {"firstName":"<value>","lastName":"<value>"}
 
-2. Date of Birth (DOB):
-   - Look for dates that could represent a person's birth date.
-   - If a date is found, convert it to the format: YYYY-MM-DD.
-   - If no clear date of birth is found, leave the field as null.
-
-The extracted entities should be structured as a string in the following format:
-{
-  "firstName": "<value>",
-  "lastName": "<value>",
-  "dob": "<value>"
-}
-
-Example input:
-Rakesh Sharma was born on March 15, 1990.
-
-Expected output:
-{
-  "firstName": "Rakesh",
-  "lastName": "Sharma",
-  "dob": "15-03-1990"
-}
-
-Please implement the parsing logic based on the given requirements and provide the output as string only.
+Example input: "My name is Kunal Patel"
+Expected output: {"firstName":"Kunal","lastName":"Patel"}
+Output in the same language as input text. So if input is in Hindi or Marathi language, values of JSON formatted string should be the same language.

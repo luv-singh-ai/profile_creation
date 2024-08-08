@@ -4,8 +4,8 @@ import re
 import tempfile
 import base64
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import (
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove # type: ignore
+from telegram.ext import ( # type: ignore
     ApplicationBuilder, ContextTypes, CommandHandler,
     MessageHandler, filters, ConversationHandler, CallbackContext
 )
@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 from datetime import date, datetime
 from typing import Literal
 from utils.profile import generate_otp, verify_otp, profile_creation
-from utils.openai_utils_s import chat_completion, audio_chat, get_duration_pydub, bhashini_text_chat, bhashini_audio_chat
+from utils.openai_utils_s import chat_completion, audio_chat, get_duration_pydub 
+# from utils.openai_utils_s import bhashini_text_chat, bhashini_audio_chat
 from utils.redis_utils import set_redis, get_redis_value
 
 load_dotenv("ops/.env")
@@ -28,7 +29,7 @@ logging.basicConfig(
 )
 
 # Define conversation states
-LANGUAGE, MOBILE, OTP, NAME_DOB, GENDER, MARITAL_STATUS, FINAL = range(7)
+LANGUAGE, MOBILE, OTP, NAME, DOB, GENDER, MARITAL_STATUS, FINAL = range(8)
 
 # Pydantic model for user data validation
 class User(BaseModel):
@@ -80,19 +81,22 @@ MESSAGES = {
         'invalid_mobile': "Please enter a valid 10-digit mobile number.",
         'otp_sent': "I've sent an OTP to your mobile number. Please provide the OTP to proceed.",
         'otp_failed': "Failed to generate OTP. Please try again later.",
-        'otp_verified': "Great! The OTP has been successfully verified. Could you please provide me with your full name, including your first name and last name? Also tell your date of birth",
+        'otp_verified': "Great! The OTP has been successfully verified. Could you please provide me with your full name, including your first name and last name?",
         'otp_invalid': "Invalid OTP. Please try again. You have {} attempts left.",
         'otp_max_attempts': "You've reached the maximum number of attempts. A new OTP has been sent to your mobile number. Please enter the new OTP.",
         'otp_gen_failed': "Failed to generate a new OTP. Please start over.",
         'input_error': "Sorry, I can only process text or voice messages.",
-        'parse_error': "I couldn't understand that. Please provide your full name and date of birth.",
+        'parse_error': "I couldn't understand that. Please provide your full name",
         'select_gender': "Thank you. Now, please select your gender:",
         'select_marital': "Please select your marital status:",
         'profile_created': "Thank you for providing your information!\n\nName: {firstName} {lastName}\nDate of Birth: {dob}\nGender: {gender}\nMarital Status: {maritalStatus}\n", #Person ID: {person_id}
         'profile_failed': "Failed to create citizen profile. Please try again later.",
         'invalid_data': "Invalid data: {}. Please start over.",
         'cancelled': "Operation cancelled. To start again, use the /start command.",
-        'msg' : 'Thank you for sharing your name and date of birth'
+        'ask_name': "Please provide your full name, including your first name and last name.",
+        'ask_dob': "Please provide your date of birth in the format DD-MM-YYYY.",
+        'invalid_name': "I couldn't understand the name. Please provide your full name, including your first name and last name.",
+        'invalid_dob': "I couldn't understand the date of birth. Please provide it in the format DD-MM-YYYY."
     },
     'hi': {
         'welcome': "नमस्ते, मैं योजना दीदी हूँ। कृपया अपनी जानकारी बताएँ।",
@@ -106,14 +110,17 @@ MESSAGES = {
         'otp_max_attempts': "आपने अधिकतम प्रयासों की संख्या पूरी कर ली है। एक नया ओटीपी आपके मोबाइल नंबर पर भेजा गया है। कृपया नया ओटीपी दर्ज करें।",
         'otp_gen_failed': "नया ओटीपी उत्पन्न करने में विफल रहा। कृपया फिर से शुरू करें।",
         'input_error': "मुझे खेद है, मैं केवल टेक्स्ट या वॉयस संदेशों को ही प्रोसेस कर सकता हूँ।",
-        'parse_error': "मैं इसे समझ नहीं सका। कृपया अपना पूरा नाम और जन्म तिथि प्रदान करें।",
+        'parse_error': "मैं इसे समझ नहीं सका। कृपया अपना पूरा नाम प्रदान करें।",
         'select_gender': "धन्यवाद। अब कृपया अपना लिंग चुनें:",
         'select_marital': "कृपया अपनी वैवाहिक स्थिति चुनें:",
-        'profile_created': "जानकारी देने के लिए धन्यवाद!\n\nनाम: {firstName} {lastName}\nजन्म तिथि: {dob}\nलिंग: {gender}\nवैवाहिक स्थिति: {maritalStatus}\nव्यक्ति आईडी: {person_id}",
+        'profile_created': "जानकारी देने के लिए धन्यवाद!\n\nनाम: {firstName} {lastName}\nजन्म तिथि: {dob}\nलिंग: {gender}\nवैवाहिक स्थिति: {maritalStatus}\n", #व्यक्ति आईडी: {person_id}
         'profile_failed': "नागरिक प्रोफ़ाइल बनाने में विफल रहा। कृपया बाद में पुनः प्रयास करें।",
         'invalid_data': "अमान्य डेटा: {}. कृपया पुनः प्रारंभ करें।",
         'cancelled': "ऑपरेशन रद्द कर दिया गया। फिर से शुरू करने के लिए, /start कमांड का उपयोग करें।",
-        'msg' : 'अपना नाम और जन्मतिथि बताने के लिए धन्यवाद'
+        'ask_name': "कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
+        'ask_dob': "कृपया अपनी जन्म तिथि DD-MM-YYYY प्रारूप में प्रदान करें.",
+        'invalid_name': "मैं नाम समझ नहीं पाया. कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
+        'invalid_dob': "मैं जन्म तिथि समझ नहीं पाया. कृपया इसे DD-MM-YYYY प्रारूप में प्रदान करें."
     },
     'mr': {
         'welcome': "नमस्कार, मी योजना ताई आहे. कृपया आपली माहिती शेअर करा.",
@@ -130,11 +137,14 @@ MESSAGES = {
         'parse_error': "मी ते समजू शकलो नाही. कृपया आपले पूर्ण नाव आणि जन्मतारीख द्या.",
         'select_gender': "धन्यवाद. आता कृपया आपले लिंग निवडा:",
         'select_marital': "कृपया आपली वैवाहिक स्थिती निवडा:",
-        'profile_created': "माहिती दिल्याबद्दल धन्यवाद!\n\nनाव: {firstName} {lastName}\nजन्मतारीख: {dob}\nलिंग: {gender}\nवैवाहिक स्थिती: {maritalStatus}\nव्यक्ती आयडी: {person_id}",
+        'profile_created': "माहिती दिल्याबद्दल धन्यवाद!\n\nनाव: {firstName} {lastName}\nजन्मतारीख: {dob}\nलिंग: {gender}\nवैवाहिक स्थिती: {maritalStatus}\n", # व्यक्ती आयडी: {person_id}
         'profile_failed': "नागरिक प्रोफाइल तयार करण्यात अयशस्वी. कृपया नंतर पुन्हा प्रयत्न करा.",
         'invalid_data': "अवैध डेटा: {}. कृपया पुन्हा प्रारंभ करा.",
         'cancelled': "ऑपरेशन रद्द केले. पुन्हा सुरू करण्यासाठी, /start कमांड वापरा.",
-        'msg' : 'तुमचे नाव आणि जन्मतारीख शेअर केल्याबद्दल धन्यवाद'
+        'ask_name': "कृपया आपले पूर्ण नाव, आपले पहिले नाव आणि आडनाव समाविष्ट करून द्या.",
+        'ask_dob': "कृपया आपला जन्मतारीख DD-MM-YYYY या स्वरूपात द्या.",
+        'invalid_name': "मला नाव समजले नाही. कृपया आपले पूर्ण नाव, आपले पहिले नाव आणि आडनाव समाविष्ट करून द्या.",
+        'invalid_dob': "मला जन्मतारीख समजली नाही. कृपया ती DD-MM-YYYY या स्वरूपात द्या."
     }
 }
 
@@ -182,7 +192,7 @@ async def otp_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     num = context.user_data['mobile']
     if verify_otp(otp, num):
         await update.message.reply_text(MESSAGES[lang]['otp_verified'])
-        return NAME_DOB
+        return NAME
     else:
         if context.user_data['otp_attempts'] >= 5:
             num = context.user_data['mobile']
@@ -196,21 +206,70 @@ async def otp_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
             await update.message.reply_text(MESSAGES[lang]['otp_invalid'].format(5 - context.user_data['otp_attempts']))
         return OTP
 
-async def name_dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def name_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     lang = context.user_data.get('lang', 'en')
-    chat_id = update.effective_chat.id
+    # chat_id = update.effective_chat.id
     
     if update.message.text:
-        response = await text_chat_handler(update, context, update.message.text)
+        response = await text_chat_handler(update, context, update.message.text, 1)
     elif update.message.voice:
         voice = await context.bot.get_file(update.message.voice.file_id)
         response = await voice_chat_handler(update, context, voice)
     else:
         await update.message.reply_text(MESSAGES[lang]['input_error'])
-        return NAME_DOB
+        return NAME
         
     try:
-        parsed_data = json.loads(response)
+        print(f"Response from chat completion: {response}")
+        # parsed_data = json.loads(response)
+        parsed_data = response
+        print("type of parsed_data is:", type(parsed_data))
+        # Check if parsed_data is a dictionary
+        if not isinstance(parsed_data, dict):
+            raise ValueError("Parsed data is not a dictionary")
+        
+        if parsed_data.get('firstName') == 'None' or parsed_data.get('lastName') == 'None':
+            await update.message.reply_text(MESSAGES[lang]['invalid_name'])
+            return NAME
+        
+        try: 
+            context.user_data.update(parsed_data)
+            print(f"Updated user data: {context.user_data}")
+        except Exception as e:
+            print(e)
+            for key, value in parsed_data.items():
+                context.user_data[key] = value
+            print(f"Updated user data: {context.user_data}")
+        
+        await update.message.reply_text(MESSAGES[lang]['ask_dob'])
+        return DOB
+    except json.JSONDecodeError as e:
+        print(f"JSON decoding error: {str(e)}")
+        await update.message.reply_text(MESSAGES[lang]['parse_error'])
+        return NAME
+    except ValueError as e:
+        print(f"Value error: {str(e)}")
+        await update.message.reply_text(MESSAGES[lang]['parse_error'])
+        return NAME
+
+async def dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    lang = context.user_data.get('lang', 'en')
+    # chat_id = update.effective_chat.id
+    
+    if update.message.text:
+        response = await text_chat_handler(update, context, update.message.text, 2)
+    elif update.message.voice:
+        voice = await context.bot.get_file(update.message.voice.file_id)
+        response = await voice_chat_handler(update, context, voice)
+    else:
+        await update.message.reply_text(MESSAGES[lang]['input_error'])
+        return DOB
+        
+    try:
+        parsed_data = response
+        if parsed_data.get('dob') == 'None':
+            await update.message.reply_text(MESSAGES[lang]['invalid_dob'])
+            return DOB
         context.user_data.update(parsed_data)
         
         await update.message.reply_text(
@@ -218,54 +277,71 @@ async def name_dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             reply_markup=ReplyKeyboardMarkup(GENDER_KEYBOARD, one_time_keyboard=True)
         )
         return GENDER
-    except json.JSONDecodeError:
+    except AttributeError:
         await update.message.reply_text(MESSAGES[lang]['parse_error'])
-        return NAME_DOB
+        return DOB
 
-async def text_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
+async def text_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, track):
     chat_id = update.effective_chat.id
     lang = context.user_data.get('lang', 'en')
+    # if lang == 'en':
+    response_json = chat_completion(chat_id, text, track)
     
-    if lang == 'en':
-        response_en = chat_completion(chat_id, text)
-        print("output is ", type(response_en))
-        # await context.bot.send_message(chat_id=chat_id, text=response_en)
-        
-        await context.bot.send_message(chat_id=chat_id, text=(MESSAGES['en']['msg']))
-    else:
-        response, response_en = bhashini_text_chat(chat_id, text, lang)
-        if response:
-            await context.bot.send_message(chat_id=chat_id, text=(MESSAGES['lang']['msg']))
-        await context.bot.send_message(chat_id=chat_id, text=(MESSAGES['en']['msg']))
-    return response_en
+    # try:
+    #     response_en = json.dumps(response_json)
+    #     print("output is ", type(response_en))
+    # # await context.bot.send_message(chat_id=chat_id, text=response_en)
+    # except Exception as e:
+    #     print(f"Error occurred while processing text chat: {str(e)}")
+    #     # await context.bot.send_message(chat_id=chat_id, text=MESSAGES[lang]['process_error'])
+    #     return None
+    #     # await context.bot.send_message(chat_id=chat_id, text=(MESSAGES['en']['msg']))
+    # return response_en
+    return response_json
 
 async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice) -> None:
     lang = context.user_data.get('lang', 'en')
     chat_id = update.effective_chat.id
 
-    with tempfile.NamedTemporaryFile(suffix='.wav' if lang == 'en' else '.mp3', delete=True) as temp_audio_file:
-        await voice.download_to_drive(custom_path=temp_audio_file.name)
-        with open(temp_audio_file.name, "rb") as file:
-            audio_data = file.read()
-            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+    try:
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=True) as temp_audio_file:
+            await voice.download_to_drive(custom_path=temp_audio_file.name)
+            
+            with open(temp_audio_file.name, "rb") as file:
+                response_audio, response_text = audio_chat(chat_id, audio_file=file)
+            
+            # Process the response text through chat_completion
+            response_json = chat_completion(chat_id, response_text)
+            response = json.dumps(response_json)
+        
+        duration = get_duration_pydub(temp_audio_file.name)
+        await context.bot.send_audio(
+            chat_id=chat_id,
+            audio=open(temp_audio_file.name, "rb"),
+            duration=duration,
+            filename="response.wav" if lang == 'en' else "response.mp3",
+            performer="Yojana Didi",
+        )
+    
+    except Exception as e:
+        print(f"Error occurred while processing voice chat: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text=MESSAGES[lang]['process_error'])
+        return None
+        # with tempfile.NamedTemporaryFile(suffix='.wav' if lang == 'en' else '.mp3', delete=True) as temp_audio_file:
+        #     await voice.download_to_drive(custom_path=temp_audio_file.name)
+        #     with open(temp_audio_file.name, "rb") as file:
+        #         audio_data = file.read()
+        #         audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-            if lang == 'en':
-                response_audio, response = audio_chat(chat_id, audio_file=file)
-                # response_audio.with_streaming_response.method(temp_audio_file.name)
-                response_audio.stream_to_file()
-            else:
-                response_audio, response = bhashini_audio_chat(chat_id, audio_file=audio_base64, lang=lang)
-                with open(temp_audio_file.name, "wb") as file_:
-                    file_.write(response_audio.content)
-
-            duration = get_duration_pydub(temp_audio_file.name)
-            await context.bot.send_audio(
-                chat_id=chat_id,
-                audio=open(temp_audio_file.name, "rb"),
-                duration=duration,
-                filename="response.wav" if lang == 'en' else "response.mp3",
-                performer="Yojana Didi",
-            )
+        #         if lang == 'en':
+        #             response_audio, response = audio_chat(chat_id, audio_file=file)
+        #             # response_audio.with_streaming_response.method(temp_audio_file.name)
+        #             # response_audio.with_streaming_response.method()
+        #         else:
+        #             response_audio, response = audio_chat(chat_id, audio_file=file)
+        #             # response_audio, response = bhashini_audio_chat(chat_id, audio_file=audio_base64, lang=lang)
+        #             with open(temp_audio_file.name, "wb") as file_:
+        #                 file_.write(response_audio.content)
     
     return response
 
@@ -317,7 +393,8 @@ def main():
             LANGUAGE: [MessageHandler(filters.Regex('^(English|हिंदी|मराठी)$'), language_callback)],
             MOBILE: [MessageHandler(filters.TEXT & ~filters.COMMAND, mobile_handler)],
             OTP: [MessageHandler(filters.TEXT & ~filters.COMMAND, otp_handler)],
-            NAME_DOB: [MessageHandler((filters.TEXT | filters.VOICE) & ~filters.COMMAND, name_dob_handler)],
+            NAME: [MessageHandler((filters.TEXT | filters.VOICE) & ~filters.COMMAND, name_handler)],
+            DOB: [MessageHandler((filters.TEXT | filters.VOICE) & ~filters.COMMAND, dob_handler)],
             GENDER: [MessageHandler(filters.Regex('^(Male|Female|Other)$'), gender_handler)],
             MARITAL_STATUS: [MessageHandler(filters.Regex('^(Single|Married|Divorced|Widowed)$'), marital_status_handler)],
         },
