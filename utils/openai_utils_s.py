@@ -32,9 +32,9 @@ client = OpenAI(
 from groq import Groq
 groq_api_key = os.getenv("GROQ_API_KEY")
 groq_model = os.getenv("GROQ_CHAT_MODEL")
+client_1 = Groq(api_key=groq_api_key)
 
 def chat_completion(chat_id, text, track):
-    client = Groq(api_key=groq_api_key)
     
     if track == 1:
         with open("prompts/prompt_s.txt", "r") as file:
@@ -43,7 +43,7 @@ def chat_completion(chat_id, text, track):
         with open("prompts/prompt_s1.txt", "r") as file:
             prompt = file.read().replace('\n', ' ')
     
-    chat_completion = client.chat.completions.create(
+    chat_completion = client_1.chat.completions.create(
         messages=[
             # Set an optional system message. This sets the behavior of the
             # assistant and can be used to provide specific instructions for
@@ -157,8 +157,10 @@ def audio_chat(chat_id, track, audio_file):
     """
     Audio chat logic using OpenAI tts and stt
     """
-    input_message = transcribe_audio(audio_file, client)
+    input_message = transcribe_audio(audio_file, client_1)
+    print(f"input_message is: ", input_message)
     response_json =  chat_completion(chat_id, input_message, track)
+    print(f"response_json is: ", response_json)
     response = json.dumps(response_json)
     response_audio = generate_audio(response, client)
     return response_audio, response_json
@@ -185,11 +187,30 @@ def audio_chat(chat_id, track, audio_file):
 #     return audio_content, response
 
 def transcribe_audio(audio_file, client):
-    transcript = client.audio.transcriptions.create(
+    transcription = client.audio.transcriptions.create(
         model="whisper-1", 
-        file=audio_file
+        file=audio_file, 
+        response_format="text"
     )
-    return transcript.text
+    msg = transcription.text
+    print(msg)
+    return msg
+
+'''
+def transcribe_audio(audio_file, client_1):
+    transcription = client.audio.transcriptions.create(
+        
+        file=audio_file, # (filename, file.read())
+        model="whisper-large-v3",
+        #   prompt="Specify context or spelling",  # Optional
+        #   response_format="json",  # Optional
+        #   language="en",  # Optional
+        #   temperature=0.0  # Optional
+        )
+    msg = transcription.text
+    print(msg)
+    return msg
+'''
 
 def generate_audio(text, client):
     response = client.audio.speech.create(
