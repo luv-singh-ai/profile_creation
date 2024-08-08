@@ -3,8 +3,8 @@ Given a user query, extract the Person's Name from the text and parse it as a JS
 2. Separate the name into first name (firstName) and last name (lastName).
 3. If no clear full name is found, enter the value as 'None'
 
-The extracted entities should be structured as a JSON formatted string in the following format: {"firstName":"<value>","lastName":"<value>"}
+The extracted entities should be structured as a JSON in the following format: {"firstName":"<value>","lastName":"<value>"}. Respond only in valid JSON format.
 
 Example input: "My name is Kunal Patel"
 Expected output: {"firstName":"Kunal","lastName":"Patel"}
-Output in the same language as input text. So if input is in Hindi or Marathi language, values of JSON formatted string should be the same language.
+Output in the same language as input text. So if input is in Hindi or Marathi language, values of JSON should be the same language.

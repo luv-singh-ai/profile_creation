@@ -8,4 +8,5 @@ pydub
 ffmpeg
 opencv-python
 pytesseract
-
+anthropic
+groq

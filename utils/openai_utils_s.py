@@ -14,6 +14,8 @@ from utils.bhashini_utils import (
     bhashini_tts
 )
 
+# import anthropic
+
 load_dotenv(
     dotenv_path="ops/.env",
 )
@@ -25,28 +27,50 @@ client = OpenAI(
     api_key=openai_api_key,
 )
 
-# import anthropic
+# Mixtral performs best at generating JSON, followed by Gemma, then Llama
 
-# client = anthropic.Anthropic()
+# claude_api_key = os.getenv("ANTHROPIC_API_KEY")
 
-# message = client.messages.create(
-#     model="claude-3-5-sonnet-20240620",
-#     max_tokens=1000,
-#     temperature=0,
-#     system="You are a world-class poet. Respond only with short poems.",
-#     messages=[
-#         {
-#             "role": "user",
-#             "content": [
+# def chat_completion(chat_id, text, track):
+#     client = anthropic.Anthropic(api_key = claude_api_key)
+    
+#     if track == 1:
+#         with open("prompts/prompt_s.txt", "r") as file:
+#             prompt = file.read().replace('\n', ' ')
+#     else:
+#         with open("prompts/prompt_s1.txt", "r") as file:
+#             prompt = file.read().replace('\n', ' ')
+    
+#     model_name = "claude-3-5-sonnet-20240620"
+#     message = client.messages.create(
+#             model=model_name,
+#             max_tokens=100,
+#             temperature=0.1,
+#             system=prompt,
+#             messages=[
 #                 {
-#                     "type": "text",
-#                     "text": "Why is the ocean salty?"
+#                     "role": "user",
+#                     "content": [
+#                         {
+#                             "type": "text",
+#                             "text": text
+#                         }
+#                     ]
 #                 }
-#             ]
-#         }
-#     ]
-# )
-# print(message.content)
+#             ],
+#             # response_format={"type": "json_object"}  # Specify JSON output
+#         )
+#     ans =  message.content[0].text # message.content
+    
+#     try:
+#         # Attempt to parse the response as JSON
+#         json_response = json.loads(ans)
+#         print("Response type:", type(json_response))
+#         print(json.dumps(json_response, indent=2))
+#         return json_response
+#     except json.JSONDecodeError:
+#         print("Error: Response is not valid JSON")
+#         return {"error": "Invalid JSON response"}
 
 def chat_completion(chat_id, text, track):
     '''
