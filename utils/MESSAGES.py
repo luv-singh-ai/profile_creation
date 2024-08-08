@@ -11,7 +11,7 @@ MESSAGES = {
         'otp_max_attempts': "You've reached the maximum number of attempts. A new OTP has been sent to your mobile number. Please enter the new OTP.",
         'otp_gen_failed': "Failed to generate a new OTP. Please start over.",
         'input_error': "Sorry, I can only process text or voice messages.",
-        'parse_error': "I couldn't understand that. Please provide your full name",
+        'parse_error': "I couldn't understand that. Please input again",
         'select_gender': "Thank you. Now, please select your gender:",
         'select_marital': "Please select your marital status:",
         'profile_created': "Thank you for providing your information!\n\nName: {firstName} {lastName}\nDate of Birth: {dob}\nGender: {gender}\nMarital Status: {maritalStatus}\n", #Person ID: {person_id}

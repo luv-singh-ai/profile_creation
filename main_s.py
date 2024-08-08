@@ -74,7 +74,6 @@ LANGUAGE_KEYBOARD = [['English', 'हिंदी', 'मराठी']]
 GENDER_KEYBOARD = [['Male', 'Female', 'Other']]
 MARITAL_STATUS_KEYBOARD = [['Single', 'Married', 'Divorced', 'Widowed', 'Others']]
 
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(MESSAGES['en']['welcome'])
     try:
@@ -141,7 +140,7 @@ async def name_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         response = await text_chat_handler(update, context, update.message.text, 1)
     elif update.message.voice:
         voice = await context.bot.get_file(update.message.voice.file_id)
-        response = await voice_chat_handler(update, context, voice)
+        response = await voice_chat_handler(update, context, voice, 1)
     else:
         await update.message.reply_text(MESSAGES[lang]['input_error'])
         return NAME
@@ -187,7 +186,7 @@ async def dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         response = await text_chat_handler(update, context, update.message.text, 2)
     elif update.message.voice:
         voice = await context.bot.get_file(update.message.voice.file_id)
-        response = await voice_chat_handler(update, context, voice)
+        response = await voice_chat_handler(update, context, voice, 2)
     else:
         await update.message.reply_text(MESSAGES[lang]['input_error'])
         return DOB
@@ -235,51 +234,121 @@ async def text_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     # return response_en
     return response_json
 
-async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice) -> None:
+async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice, track) -> None:
     lang = context.user_data.get('lang', 'en')
     chat_id = update.effective_chat.id
 
     try:
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=True) as temp_audio_file:
-            await voice.download_to_drive(custom_path=temp_audio_file.name)
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_input_file, \
+             tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_output_file:
             
-            with open(temp_audio_file.name, "rb") as file:
-                response_audio, response_text = audio_chat(chat_id, audio_file=file)
+            # Download and process input audio
+            await voice.download_to_drive(custom_path=temp_input_file.name)
+            
+            with open(temp_input_file.name, "rb") as file:
+                response_audio, response_json = audio_chat(chat_id, track, audio_file=file)
             
             # Process the response text through chat_completion
-            response_json = chat_completion(chat_id, response_text)
-            response = json.dumps(response_json)
-        
-        duration = get_duration_pydub(temp_audio_file.name)
-        await context.bot.send_audio(
-            chat_id=chat_id,
-            audio=open(temp_audio_file.name, "rb"),
-            duration=duration,
-            filename="response.wav" if lang == 'en' else "response.mp3",
-            performer="Yojana Didi",
-        )
-    
+            # response_json = chat_completion(chat_id, response_text, track)
+            if response_json is None:
+                raise ValueError("Failed to get a valid response from chat completion")
+            # Save the audio response
+            if hasattr(response_audio, 'content'):
+                with open(temp_output_file.name, "wb") as file:
+                    file.write(response_audio.content)
+            elif hasattr(response_audio, 'read'):
+                with open(temp_output_file.name, "wb") as file:
+                    file.write(response_audio.read())
+            else:
+                raise TypeError("Unexpected type for response_audio")
+            # # Handle audio response
+            # if isinstance(response_audio, bytes):
+            #     with open(temp_output_file.name, "wb") as file:
+            #         file.write(response_audio.content) # response_audio
+            # else:
+            #     response_audio.with_streaming_response.method(temp_output_file.name)
+            
+            # Get audio duration
+            duration = get_duration_pydub(temp_output_file.name)
+            
+            # Send audio response
+            with open(temp_output_file.name, "rb") as audio_file:
+                await context.bot.send_audio(
+                    chat_id=chat_id,
+                    audio=audio_file,
+                    duration=duration,
+                    filename="response.wav",
+                    performer="Yojana Didi",
+                )
+        try:
+            text_response = json.dumps(response_json)
+            await context.bot.send_message(chat_id=chat_id, text=text_response)
+        except Exception as e:
+            print(e)
+        return response_json
+
     except Exception as e:
         print(f"Error occurred while processing voice chat: {str(e)}")
-        await context.bot.send_message(chat_id=chat_id, text=MESSAGES[lang]['process_error'])
+        await context.bot.send_message(chat_id=chat_id, text=MESSAGES[lang]['parse_error'])
         return None
-        # with tempfile.NamedTemporaryFile(suffix='.wav' if lang == 'en' else '.mp3', delete=True) as temp_audio_file:
-        #     await voice.download_to_drive(custom_path=temp_audio_file.name)
-        #     with open(temp_audio_file.name, "rb") as file:
-        #         audio_data = file.read()
-        #         audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-        #         if lang == 'en':
-        #             response_audio, response = audio_chat(chat_id, audio_file=file)
-        #             # response_audio.with_streaming_response.method(temp_audio_file.name)
-        #             # response_audio.with_streaming_response.method()
-        #         else:
-        #             response_audio, response = audio_chat(chat_id, audio_file=file)
-        #             # response_audio, response = bhashini_audio_chat(chat_id, audio_file=audio_base64, lang=lang)
-        #             with open(temp_audio_file.name, "wb") as file_:
-        #                 file_.write(response_audio.content)
+    finally:
+        # Clean up temporary files
+        for file in [temp_input_file.name, temp_output_file.name]:
+            try:
+                os.unlink(file)
+            except Exception as e:
+                print(f"Error deleting temporary file {file}: {str(e)}")
+
+# async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, voice, track) -> None:
+#     lang = context.user_data.get('lang', 'en')
+#     chat_id = update.effective_chat.id
+#     audio_file = voice
+#     try:
+#         with tempfile.NamedTemporaryFile(suffix='.wav', delete=True) as temp_audio_file:
+#             await audio_file.download_to_drive(custom_path=temp_audio_file.name)
+            
+#             with open(temp_audio_file.name, "rb") as file:
+#                 response_audio, response_text = audio_chat(chat_id, track, audio_file=file)
+            
+#             # Process the response text through chat_completion
+#             response_json = chat_completion(chat_id, response_text, track)
+#             response_audio.with_streaming_response.method(temp_audio_file.name)
+#             # response = json.dumps(response_json)
+#             with open(temp_audio_file.name, "wb") as file_:
+#                 file_.write(response_audio.content)
+#             file.close()
+        
+#         duration = get_duration_pydub(temp_audio_file.name)
+#         await context.bot.send_audio(
+#             chat_id=chat_id,
+#             audio=open(temp_audio_file.name, "rb"),
+#             duration=duration,
+#             filename="response.wav" if lang == 'en' else "response.mp3",
+#             performer="Yojana Didi",
+#         )
     
-    return response
+#     except Exception as e:
+#         print(f"Error occurred while processing voice chat: {str(e)}")
+#         await context.bot.send_message(chat_id=chat_id, text=MESSAGES[lang]['parse_error'])
+#         return None
+#         # with tempfile.NamedTemporaryFile(suffix='.wav' if lang == 'en' else '.mp3', delete=True) as temp_audio_file:
+#         #     await voice.download_to_drive(custom_path=temp_audio_file.name)
+#         #     with open(temp_audio_file.name, "rb") as file:
+#         #         audio_data = file.read()
+#         #         audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+
+#         #         if lang == 'en':
+#         #             response_audio, response = audio_chat(chat_id, audio_file=file)
+#         #             # response_audio.with_streaming_response.method(temp_audio_file.name)
+#         #             # response_audio.with_streaming_response.method()
+#         #         else:
+#         #             response_audio, response = audio_chat(chat_id, audio_file=file)
+#         #             # response_audio, response = bhashini_audio_chat(chat_id, audio_file=audio_base64, lang=lang)
+#         #             with open(temp_audio_file.name, "wb") as file_:
+#         #                 file_.write(response_audio.content)
+    
+#     return response_json
 
 async def gender_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     lang = context.user_data.get('lang', 'en')

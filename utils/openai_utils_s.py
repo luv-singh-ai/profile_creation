@@ -121,47 +121,47 @@ def chat_completion(chat_id, text, track):
 #         print("Error: Response is not valid JSON")
 #         return {"error": "Invalid JSON response"}
 
-def chat_completion(chat_id, text, track):
-    '''
-    SAMPLE JSON SCHEMA
-    {
-        "firstName": <value>,
-        "lastName": <value>
-    }
-    '''
-    if track == 1:
-        with open("prompts/prompt_s.txt", "r") as file:
-            prompt = file.read().replace('\n', ' ')
-    else:
-        with open("prompts/prompt_s1.txt", "r") as file:
-            prompt = file.read().replace('\n', ' ')
+# def chat_completion(chat_id, text, track):
+#     '''
+#     SAMPLE JSON SCHEMA
+#     {
+#         "firstName": <value>,
+#         "lastName": <value>
+#     }
+#     '''
+#     if track == 1:
+#         with open("prompts/prompt_s.txt", "r") as file:
+#             prompt = file.read().replace('\n', ' ')
+#     else:
+#         with open("prompts/prompt_s1.txt", "r") as file:
+#             prompt = file.read().replace('\n', ' ')
     
-    completion = client.chat.completions.create(
-        model=model_name,
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": text},
-        ],
-        response_format={"type": "json_object"},
-        # temperature=0.1,
-        # stream=True 
-    )
-    # for chunk in completion:
-    #     return chunk.choices[0].delta
-    ans = completion.choices[0].message.content
-    print("type is :", type(ans))
-    print(ans)
-    return ans
+#     completion = client.chat.completions.create(
+#         model=model_name,
+#         messages=[
+#             {"role": "system", "content": prompt},
+#             {"role": "user", "content": text},
+#         ],
+#         response_format={"type": "json_object"},
+#         # temperature=0.1,
+#         # stream=True 
+#     )
+#     # for chunk in completion:
+#     #     return chunk.choices[0].delta
+#     ans = completion.choices[0].message.content
+#     print("type is :", type(ans))
+#     print(ans)
+#     return ans
 
-def audio_chat(chat_id, audio_file):
+def audio_chat(chat_id, track, audio_file):
     """
     Audio chat logic using OpenAI tts and stt
     """
     input_message = transcribe_audio(audio_file, client)
-    response_json =  chat_completion(chat_id, input_message)
+    response_json =  chat_completion(chat_id, input_message, track)
     response = json.dumps(response_json)
     response_audio = generate_audio(response, client)
-    return response_audio, response
+    return response_audio, response_json
 
 # def bhashini_text_chat(chat_id, text, lang): 
 #     """
