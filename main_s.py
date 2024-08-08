@@ -94,9 +94,9 @@ MESSAGES = {
         'invalid_data': "Invalid data: {}. Please start over.",
         'cancelled': "Operation cancelled. To start again, use the /start command.",
         'ask_name': "Please provide your full name, including your first name and last name.",
-        'ask_dob': "Please provide your date of birth in the format DD-MM-YYYY.",
+        'ask_dob': "Please provide your date of birth",
         'invalid_name': "I couldn't understand the name. Please provide your full name, including your first name and last name.",
-        'invalid_dob': "I couldn't understand the date of birth. Please provide it in the format DD-MM-YYYY."
+        'invalid_dob': "I couldn't understand the date of birth. Please provide it again"
     },
     'hi': {
         'welcome': "नमस्ते, मैं योजना दीदी हूँ। कृपया अपनी जानकारी बताएँ।",
@@ -118,7 +118,7 @@ MESSAGES = {
         'invalid_data': "अमान्य डेटा: {}. कृपया पुनः प्रारंभ करें।",
         'cancelled': "ऑपरेशन रद्द कर दिया गया। फिर से शुरू करने के लिए, /start कमांड का उपयोग करें।",
         'ask_name': "कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
-        'ask_dob': "कृपया अपनी जन्म तिथि DD-MM-YYYY प्रारूप में प्रदान करें.",
+        'ask_dob': "कृपया अपनी जन्म तिथि प्रदान करें.",
         'invalid_name': "मैं नाम समझ नहीं पाया. कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
         'invalid_dob': "मैं जन्म तिथि समझ नहीं पाया. कृपया इसे DD-MM-YYYY प्रारूप में प्रदान करें."
     },
@@ -134,7 +134,7 @@ MESSAGES = {
         'otp_max_attempts': "आपण जास्तीत जास्त प्रयत्नांची संख्या गाठली आहे. एक नवीन ओटीपी आपल्या मोबाइल नंबरवर पाठविला गेला आहे. कृपया नवीन ओटीपी प्रविष्ट करा.",
         'otp_gen_failed': "नवीन ओटीपी तयार करण्यात अयशस्वी. कृपया पुन्हा सुरू करा.",
         'input_error': "मला वाईट वाटते, मी फक्त मजकूर किंवा आवाज संदेशांची प्रक्रिया करू शकतो.",
-        'parse_error': "मी ते समजू शकलो नाही. कृपया आपले पूर्ण नाव आणि जन्मतारीख द्या.",
+        'parse_error': "मी ते समजू शकलो नाही. कृपया आपले पूर्ण नाव द्या.",
         'select_gender': "धन्यवाद. आता कृपया आपले लिंग निवडा:",
         'select_marital': "कृपया आपली वैवाहिक स्थिती निवडा:",
         'profile_created': "माहिती दिल्याबद्दल धन्यवाद!\n\nनाव: {firstName} {lastName}\nजन्मतारीख: {dob}\nलिंग: {gender}\nवैवाहिक स्थिती: {maritalStatus}\n", # व्यक्ती आयडी: {person_id}
@@ -221,8 +221,8 @@ async def name_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         
     try:
         print(f"Response from chat completion: {response}")
-        # parsed_data = json.loads(response)
-        parsed_data = response
+        parsed_data = json.loads(response)
+        # parsed_data = response
         print("type of parsed_data is:", type(parsed_data))
         # Check if parsed_data is a dictionary
         if not isinstance(parsed_data, dict):
@@ -266,11 +266,20 @@ async def dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         return DOB
         
     try:
-        parsed_data = response
+        print(f"Response from chat completion: {response}")
+        parsed_data = json.loads(response)
         if parsed_data.get('dob') == 'None':
             await update.message.reply_text(MESSAGES[lang]['invalid_dob'])
             return DOB
-        context.user_data.update(parsed_data)
+        
+        try: 
+            context.user_data.update(parsed_data)
+            print(f"Updated user data: {context.user_data}")
+        except Exception as e:
+            print(e)
+            for key, value in parsed_data.items():
+                context.user_data[key] = value
+            print(f"Updated user data: {context.user_data}")
         
         await update.message.reply_text(
             MESSAGES[lang]['select_gender'],
@@ -278,7 +287,7 @@ async def dob_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         )
         return GENDER
     except AttributeError:
-        await update.message.reply_text(MESSAGES[lang]['parse_error'])
+        await update.message.reply_text(MESSAGES[lang]['invalid_dob'])
         return DOB
 
 async def text_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, track):
