@@ -192,7 +192,7 @@ def transcribe_audio(audio_file, client):
         file=audio_file, 
         response_format="text"
     )
-    msg = transcription.text
+    msg = transcription # transcription.text
     print(msg)
     return msg
 
