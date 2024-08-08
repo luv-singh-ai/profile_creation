@@ -157,7 +157,7 @@ def audio_chat(chat_id, track, audio_file):
     """
     Audio chat logic using OpenAI tts and stt
     """
-    input_message = transcribe_audio(audio_file, client_1)
+    input_message = transcribe_audio(audio_file, client) # client_1 for groq whisper v3 model
     print(f"input_message is: ", input_message)
     response_json =  chat_completion(chat_id, input_message, track)
     print(f"response_json is: ", response_json)
