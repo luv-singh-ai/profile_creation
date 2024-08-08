@@ -15,7 +15,7 @@ from utils.bhashini_utils import (
 )
 
 # import anthropic
-
+# claude_api_key = os.getenv("ANTHROPIC_API_KEY")
 load_dotenv(
     dotenv_path="ops/.env",
 )
@@ -29,7 +29,56 @@ client = OpenAI(
 
 # Mixtral performs best at generating JSON, followed by Gemma, then Llama
 
-# claude_api_key = os.getenv("ANTHROPIC_API_KEY")
+from groq import Groq
+groq_api_key = os.getenv("GROQ_API_KEY")
+groq_model = os.getenv("GROQ_CHAT_MODEL")
+
+def chat_completion(chat_id, text, track):
+    client = Groq(api_key=groq_api_key)
+    
+    if track == 1:
+        with open("prompts/prompt_s.txt", "r") as file:
+            prompt = file.read().replace('\n', ' ')
+    else:
+        with open("prompts/prompt_s1.txt", "r") as file:
+            prompt = file.read().replace('\n', ' ')
+    
+    chat_completion = client.chat.completions.create(
+        messages=[
+            # Set an optional system message. This sets the behavior of the
+            # assistant and can be used to provide specific instructions for
+            # how it should behave throughout the conversation.
+            {
+                "role": "system",
+                "content": prompt
+            },
+            # Set a user message for the assistant to respond to.
+            {
+                "role": "user",
+                "content": text,
+            }
+        ],
+
+        # The language model which will generate the completion.
+        model=groq_model,
+        temperature=0.1,
+        max_tokens=100,
+        top_p=1,
+        # A stop sequence is a predefined or user-specified text string that
+        # signals an AI to stop generating content, ensuring its responses
+        # remain focused and concise. Examples include punctuation marks and
+        # markers like "[end]".
+        stop=None,
+        # If set, partial message deltas will be sent.
+        stream=False,
+        response_format={"type": "json_object"},
+    )
+
+    ans = chat_completion.choices[0].message.content
+    print("type is :", type(ans))
+    print(ans)
+    return ans
+
 
 # def chat_completion(chat_id, text, track):
 #     client = anthropic.Anthropic(api_key = claude_api_key)

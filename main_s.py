@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 from datetime import date, datetime
 from typing import Literal
 from utils.profile import generate_otp, verify_otp, profile_creation
-from utils.openai_utils_s import chat_completion, audio_chat, get_duration_pydub 
+from utils.openai_utils_s import chat_completion, audio_chat, get_duration_pydub
+from utils.MESSAGES import MESSAGES
 # from utils.openai_utils_s import bhashini_text_chat, bhashini_audio_chat
 from utils.redis_utils import set_redis, get_redis_value
 
@@ -73,7 +74,7 @@ LANGUAGE_KEYBOARD = [['English', 'हिंदी', 'मराठी']]
 GENDER_KEYBOARD = [['Male', 'Female', 'Other']]
 MARITAL_STATUS_KEYBOARD = [['Single', 'Married', 'Divorced', 'Widowed', 'Others']]
 
-from prompts import MESSAGES
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(MESSAGES['en']['welcome'])
     try:
