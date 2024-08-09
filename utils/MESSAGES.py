@@ -19,7 +19,7 @@ MESSAGES = {
         'invalid_data': "Invalid data: {}. Please start over.",
         'cancelled': "Operation cancelled. To start again, use the /start command.",
         'ask_name': "Please provide your full name, including your first name and last name.",
-        'ask_dob': "Please provide your date of birth",
+        'ask_dob': "Please provide your date of birth in DD-MM-YYYY format.",
         'invalid_name': "I couldn't understand the name. Please provide your full name, including your first name and last name.",
         'invalid_dob': "I couldn't understand the date of birth. Please provide it again"
     },
@@ -43,7 +43,7 @@ MESSAGES = {
         'invalid_data': "अमान्य डेटा: {}. कृपया पुनः प्रारंभ करें।",
         'cancelled': "ऑपरेशन रद्द कर दिया गया। फिर से शुरू करने के लिए, /start कमांड का उपयोग करें।",
         'ask_name': "कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
-        'ask_dob': "कृपया अपनी जन्म तिथि प्रदान करें.",
+        'ask_dob': "कृपया अपनी जन्म तिथि प्रदान करें (DD-MM-YYYY)",
         'invalid_name': "मैं नाम समझ नहीं पाया. कृपया अपना पूरा नाम, जिसमें आपका पहला नाम और अंतिम नाम शामिल है, प्रदान करें.",
         'invalid_dob': "मैं जन्म तिथि समझ नहीं पाया. कृपया इसे DD-MM-YYYY प्रारूप में प्रदान करें."
     },

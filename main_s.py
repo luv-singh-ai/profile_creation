@@ -246,7 +246,7 @@ async def voice_chat_handler(update: Update, context: ContextTypes.DEFAULT_TYPE,
             await voice.download_to_drive(custom_path=temp_input_file.name)
             
             with open(temp_input_file.name, "rb") as file:
-                response_audio, response_json = audio_chat(chat_id, track, audio_file=file)
+                response_audio, response_json = audio_chat(chat_id, track, lang, audio_file=file)
             
             # Process the response text through chat_completion
             # response_json = chat_completion(chat_id, response_text, track)

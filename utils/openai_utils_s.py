@@ -153,15 +153,17 @@ def chat_completion(chat_id, text, track):
 #     print(ans)
 #     return ans
 
-def audio_chat(chat_id, track, audio_file):
+def audio_chat(chat_id, track, lang, audio_file):
     """
     Audio chat logic using OpenAI tts and stt
     """
     input_message = transcribe_audio(audio_file, client) # client_1 for groq whisper v3 model
     print(f"input_message is: ", input_message)
-    response_json =  chat_completion(chat_id, input_message, track)
+    translated_message = bhashini_translate(input_message, lang, "en")
+    response_json =  chat_completion(chat_id, translated_message, track)
     print(f"response_json is: ", response_json)
     response = json.dumps(response_json)
+    print(f"response is: ", response)
     response_audio = generate_audio(response, client)
     return response_audio, response_json
 
